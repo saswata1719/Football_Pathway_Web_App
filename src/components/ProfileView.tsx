@@ -1,9 +1,14 @@
+"use client"
+
+import { useState } from "react"
 import {
     Heart,
     MapPin,
     Settings,
 } from "lucide-react"
+import Link from "next/link"
 import { RiVerifiedBadgeFill } from "react-icons/ri"
+import VideoPreviewDialog, { type VideoPreviewItem } from "@/components/VideoPreviewDialog"
 
 const profileStats = [
     { label: "Total Videos", value: "24" },
@@ -19,6 +24,9 @@ const videoGrid = [
         duration: "00:24",
         image:
             "https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=800&auto=format&fit=crop",
+        role: "Striker • 17",
+        location: "Mumbai, India",
+        description: "Quick release, sharp movement, and a composed finish in traffic.",
     },
     {
         id: "2",
@@ -27,6 +35,9 @@ const videoGrid = [
         duration: "00:18",
         image:
             "https://images.unsplash.com/photo-1518604666860-9ed391f76460?q=80&w=800&auto=format&fit=crop",
+        role: "Winger • 18",
+        location: "Delhi, India",
+        description: "Burst of pace down the line and a clean final action in transition.",
     },
     {
         id: "3",
@@ -35,6 +46,9 @@ const videoGrid = [
         duration: "00:31",
         image:
             "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=800&auto=format&fit=crop",
+        role: "Striker • 17",
+        location: "Pune, India",
+        description: "Smart run off the shoulder and a tidy finish across goal.",
     },
     {
         id: "4",
@@ -43,6 +57,9 @@ const videoGrid = [
         duration: "00:20",
         image:
             "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=800&auto=format&fit=crop",
+        role: "Midfielder • 18",
+        location: "Goa, India",
+        description: "Turns out of pressure well and releases the runner at the right moment.",
     },
     {
         id: "5",
@@ -51,6 +68,9 @@ const videoGrid = [
         duration: "00:26",
         image:
             "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?q=80&w=800&auto=format&fit=crop",
+        role: "Winger • 19",
+        location: "Bengaluru, India",
+        description: "Direct carry into space with strong acceleration and end product.",
     },
     {
         id: "6",
@@ -59,11 +79,41 @@ const videoGrid = [
         duration: "00:17",
         image:
             "https://images.unsplash.com/photo-1487466365202-1afdb86c764e?q=80&w=800&auto=format&fit=crop",
+        role: "Striker • 18",
+        location: "Chennai, India",
+        description: "Excellent first touch under pressure before setting up the next action.",
     },
 ]
 
 export default function ProfileView() {
+    const [selectedVideo, setSelectedVideo] = useState<VideoPreviewItem | null>(null)
+    const [isDialogVisible, setIsDialogVisible] = useState(false)
+
+    const openVideoDialog = (video: (typeof videoGrid)[number]) => {
+        setSelectedVideo({
+            id: video.id,
+            title: video.title,
+            subtitle: video.role,
+            location: video.location,
+            views: video.plays,
+            duration: video.duration,
+            poster: video.image,
+            videoUrl: "https://www.pexels.com/download/video/32305343/",
+            badge: "Uploaded Reel",
+            description: video.description,
+        })
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => setIsDialogVisible(true))
+        })
+    }
+
+    const closeVideoDialog = () => {
+        setIsDialogVisible(false)
+        window.setTimeout(() => setSelectedVideo(null), 220)
+    }
+
     return (
+        <>
         <main className="min-h-svh bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] px-4 pb-28 md:pt-5 pt-3 sm:px-6">
             <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
                 <section className="overflow-hidden ">
@@ -96,7 +146,13 @@ export default function ProfileView() {
                                 </div>
                             </div>
                             <div className="flex items-end md:gap-10 gap-7 justify-between flex-col">
-                                <Settings size={20} className="cursor-pointer hover:rotate-45 opacity-80 transition-all duration-300" />
+                                <Link
+                                    href="/edit-profile"
+                                    className="cursor-pointer opacity-80 transition-all duration-300 hover:rotate-45"
+                                    aria-label="Open edit profile page"
+                                >
+                                    <Settings size={20} />
+                                </Link>
                                 <div className="rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
                                     Profile
                                 </div>
@@ -141,9 +197,11 @@ export default function ProfileView() {
 
                     <div className="mt-4 grid md:grid-cols-3 grid-cols-2 gap-2.5">
                         {videoGrid.map((video) => (
-                            <article
+                            <button
                                 key={video.id}
-                                className="group overflow-hidden rounded-xl bg-slate-100"
+                                type="button"
+                                onClick={() => openVideoDialog(video)}
+                                className="group overflow-hidden rounded-xl bg-slate-100 text-left"
                             >
                                 <div
                                     aria-hidden="true"
@@ -166,11 +224,18 @@ export default function ProfileView() {
                                         </p>
                                     </div>
                                 </div>
-                            </article>
+                            </button>
                         ))}
                     </div>
                 </section>
             </div>
         </main>
+        <VideoPreviewDialog
+            item={selectedVideo}
+            isOpen={!!selectedVideo}
+            isVisible={isDialogVisible}
+            onClose={closeVideoDialog}
+        />
+        </>
     )
 }

@@ -11,6 +11,7 @@ import {
     Sparkles,
 } from "lucide-react"
 import { RiVerifiedBadgeFill } from "react-icons/ri"
+import CommentsDrawer from "@/components/CommentsDrawer"
 
 const demoVideo = {
     source: "https://www.pexels.com/download/video/32305343/",
@@ -85,8 +86,78 @@ const statMeta = [
     { key: "shares", icon: Share2, label: "Shares" },
 ] as const
 
+const commentsByReel: Record<
+    string,
+    Array<{ id: string; name: string; time: string; text: string }>
+> = {
+    "saswata-roy": [
+        {
+            id: "c1",
+            name: "Coach Rahul",
+            time: "2m ago",
+            text: "Excellent first touch and awareness before the finish.",
+        },
+        {
+            id: "c2",
+            name: "Scout Desk",
+            time: "12m ago",
+            text: "Strong timing on the run. Would like to see more off-ball clips too.",
+        },
+        {
+            id: "c3",
+            name: "Nikhil Verma",
+            time: "28m ago",
+            text: "Top composure in the final third.",
+        },
+    ],
+    "maya-fernandez": [
+        {
+            id: "c4",
+            name: "Ananya",
+            time: "6m ago",
+            text: "The burst of pace here is really strong.",
+        },
+        {
+            id: "c5",
+            name: "Elite Trials",
+            time: "18m ago",
+            text: "Would be great to see a longer sequence from the same match.",
+        },
+    ],
+    "zayan-khan": [
+        {
+            id: "c6",
+            name: "Playmaker Hub",
+            time: "9m ago",
+            text: "Really tidy in possession. Nice control between the lines.",
+        },
+        {
+            id: "c7",
+            name: "Arif",
+            time: "22m ago",
+            text: "That forward pass split the shape perfectly.",
+        },
+    ],
+    "arjun-mehta": [
+        {
+            id: "c8",
+            name: "Defensive Unit",
+            time: "5m ago",
+            text: "Great recovery angle and quick release after winning it back.",
+        },
+        {
+            id: "c9",
+            name: "Tactical Board",
+            time: "16m ago",
+            text: "Strong body positioning throughout the clip.",
+        },
+    ],
+}
+
 export default function HomeReelFeed() {
     const [playingId, setPlayingId] = useState<string | null>(null)
+    const [activeCommentsFor, setActiveCommentsFor] = useState<string | null>(null)
+    const [isCommentsVisible, setIsCommentsVisible] = useState(false)
     const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
 
     const pauseAllVideos = (exceptId?: string) => {
@@ -119,6 +190,26 @@ export default function HomeReelFeed() {
             setPlayingId(null)
         }
     }
+
+    const openComments = (id: string) => {
+        pauseAllVideos()
+        setPlayingId(null)
+        setActiveCommentsFor(id)
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => setIsCommentsVisible(true))
+        })
+    }
+
+    const closeComments = () => {
+        setIsCommentsVisible(false)
+        window.setTimeout(() => {
+            setActiveCommentsFor(null)
+        }, 220)
+    }
+
+    const activeComments = activeCommentsFor
+        ? commentsByReel[activeCommentsFor] ?? []
+        : []
 
     return (
         <main className="h-svh overflow-hidden bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] sm:px-4 sm:pt-5">
@@ -231,15 +322,27 @@ export default function HomeReelFeed() {
                                     <aside className="absolute bottom-4 right-2 flex flex-col items-center gap-4">
                                         {statMeta.map((stat) => {
                                             const Icon = stat.icon
+                                            const isComments = stat.key === "comments"
 
                                             return (
                                                 <div
                                                     key={stat.label}
                                                     className="flex w-16 flex-col items-center gap-1.5"
                                                 >
-                                                    <div className="flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-xl border border-white/12 bg-black/40 text-white backdrop-blur-md">
-                                                        <Icon size={20} />
-                                                    </div>
+                                                    {isComments ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openComments(item.id)}
+                                                            className="flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-xl border border-white/12 bg-black/40 text-white backdrop-blur-md transition-colors hover:bg-black/55"
+                                                            aria-label={`Open comments for ${item.name}`}
+                                                        >
+                                                            <Icon size={20} />
+                                                        </button>
+                                                    ) : (
+                                                        <div className="flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-xl border border-white/12 bg-black/40 text-white backdrop-blur-md">
+                                                            <Icon size={20} />
+                                                        </div>
+                                                    )}
                                                     <span className="text-xs font-medium text-white">
                                                         {item[stat.key]}
                                                     </span>
@@ -253,6 +356,12 @@ export default function HomeReelFeed() {
                     })}
                 </div>
             </div>
+            <CommentsDrawer
+                comments={activeComments}
+                isVisible={isCommentsVisible}
+                isOpen={!!activeCommentsFor}
+                onClose={closeComments}
+            />
         </main >
     )
 }

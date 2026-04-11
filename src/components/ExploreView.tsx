@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import {
     Eye,
     Filter,
@@ -21,6 +24,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import Link from "next/link"
+import VideoPreviewDialog, { type VideoPreviewItem } from "@/components/VideoPreviewDialog"
 
 const risingTalent = [
     {
@@ -31,6 +35,8 @@ const risingTalent = [
         likes: "1.2K",
         image:
             "https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=900&auto=format&fit=crop",
+        location: "Mumbai, India",
+        description: "Clinical movement in the box with sharp finishing instincts.",
     },
     {
         id: "2",
@@ -40,6 +46,8 @@ const risingTalent = [
         likes: "1.5K",
         image:
             "https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?q=80&w=900&auto=format&fit=crop",
+        location: "Delhi, India",
+        description: "Direct wide player with speed, carry, and confidence in 1v1 moments.",
     },
     {
         id: "3",
@@ -49,6 +57,8 @@ const risingTalent = [
         likes: "980",
         image:
             "https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=900&auto=format&fit=crop",
+        location: "Goa, India",
+        description: "Strong rhythm setter who scans well and keeps the team progressing.",
     },
     {
         id: "4",
@@ -58,6 +68,8 @@ const risingTalent = [
         likes: "1.1K",
         image:
             "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=900&auto=format&fit=crop",
+        location: "Pune, India",
+        description: "Aggressive front-foot defender with good timing in duels.",
     },
 ]
 
@@ -71,6 +83,7 @@ const trendingPlayers = [
         location: "Mumbai, India",
         views: "12.5K",
         score: "9.8",
+        description: "Top performer this week with standout finishing clips and strong engagement.",
     },
     {
         id: "2",
@@ -81,6 +94,7 @@ const trendingPlayers = [
         location: "Delhi, India",
         views: "10.9K",
         score: "9.6",
+        description: "Wide threat creating separation early and delivering in final actions.",
     },
     {
         id: "3",
@@ -91,6 +105,7 @@ const trendingPlayers = [
         location: "Goa, India",
         views: "9.7K",
         score: "9.4",
+        description: "Composed midfielder showing clean control and progressive passing.",
     },
     {
         id: "4",
@@ -101,11 +116,28 @@ const trendingPlayers = [
         location: "Pune, India",
         views: "11.1K",
         score: "9.7",
+        description: "Reliable defender earning attention through timing and recovery pace.",
     },
 ]
 
 export default function ExploreView() {
+    const [selectedVideo, setSelectedVideo] = useState<VideoPreviewItem | null>(null)
+    const [isDialogVisible, setIsDialogVisible] = useState(false)
+
+    const openVideoDialog = (item: VideoPreviewItem) => {
+        setSelectedVideo(item)
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => setIsDialogVisible(true))
+        })
+    }
+
+    const closeVideoDialog = () => {
+        setIsDialogVisible(false)
+        window.setTimeout(() => setSelectedVideo(null), 220)
+    }
+
     return (
+        <>
         <main className="min-h-svh bg-white px-4 pb-28 pt-8 sm:px-6">
             <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
                 <section className="space-y-4">
@@ -228,9 +260,24 @@ export default function ExploreView() {
 
                     <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4 grid-cols-2">
                         {risingTalent.map((player) => (
-                            <article
+                            <button
                                 key={player.id}
-                                className="relative overflow-hidden rounded-xl  p-4 text-white shadow-[0_18px_40px_rgba(37,99,235,0.18)]"
+                                type="button"
+                                onClick={() =>
+                                    openVideoDialog({
+                                        id: player.id,
+                                        title: player.name,
+                                        subtitle: `${player.role} • ${player.age}`,
+                                        location: player.location,
+                                        views: player.likes,
+                                        duration: "00:24",
+                                        poster: player.image,
+                                        videoUrl: "https://www.pexels.com/download/video/32305343/",
+                                        badge: "Trending",
+                                        description: player.description,
+                                    })
+                                }
+                                className="relative overflow-hidden rounded-xl p-4 text-left text-white shadow-[0_18px_40px_rgba(37,99,235,0.18)]"
                             >
                                 <div
                                     aria-hidden="true"
@@ -259,7 +306,7 @@ export default function ExploreView() {
                                         </div>
                                     </div>
                                 </div>
-                            </article>
+                            </button>
                         ))}
                     </div>
                 </section>
@@ -286,9 +333,24 @@ export default function ExploreView() {
 
                     <div className="grid gap-2 lg:grid-cols-2">
                         {trendingPlayers.map((player) => (
-                            <article
+                            <button
                                 key={player.id}
-                                className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.05)]"
+                                type="button"
+                                onClick={() =>
+                                    openVideoDialog({
+                                        id: player.id,
+                                        title: player.name,
+                                        subtitle: `${player.role} • ${player.age}`,
+                                        location: player.location,
+                                        views: player.views,
+                                        duration: "00:24",
+                                        poster: risingTalent[(Number(player.id) - 1) % risingTalent.length].image,
+                                        videoUrl: "https://www.pexels.com/download/video/32305343/",
+                                        badge: player.tag,
+                                        description: player.description,
+                                    })
+                                }
+                                className="rounded-xl border border-slate-200 bg-white p-4 text-left shadow-[0_12px_30px_rgba(15,23,42,0.05)]"
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div>
@@ -315,11 +377,18 @@ export default function ExploreView() {
                                         <StarIcon fill="#fdc700" size={10} className="text-yellow-400" /> {player.score}
                                     </div>
                                 </div>
-                            </article>
+                            </button>
                         ))}
                     </div>
                 </section>
             </div>
         </main>
+        <VideoPreviewDialog
+            item={selectedVideo}
+            isOpen={!!selectedVideo}
+            isVisible={isDialogVisible}
+            onClose={closeVideoDialog}
+        />
+        </>
     )
 }
