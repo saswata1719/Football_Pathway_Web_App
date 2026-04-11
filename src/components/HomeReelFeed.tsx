@@ -121,7 +121,7 @@ export default function HomeReelFeed() {
     }
 
     return (
-        <main className="h-svh overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.16),_transparent_26%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.14),_transparent_28%),linear-gradient(180deg,_#08111f_0%,_#04070d_100%)]  sm:px-6 sm:pt-5">
+        <main className="h-svh overflow-hidden bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] sm:px-4 sm:pt-5">
             <div className="mx-auto md:h-[calc(100svh-7.5rem)] h-[calc(100svh-4rem)] w-full max-w-md overflow-hidden">
                 <div
                     className="no-scrollbar h-full snap-y snap-mandatory overflow-y-auto overscroll-y-contain"
@@ -136,9 +136,9 @@ export default function HomeReelFeed() {
                         return (
                             <article
                                 key={item.id}
-                                className="flex md:h-[calc(100svh-7.5rem)] h-[calc(100svh-4rem)] snap-start items-center md:py-3"
+                                className="flex md:h-[calc(100svh-7.5rem)] h-[calc(100svh-4rem)] md:rounded-2xl overflow-hidden snap-start items-center"
                             >
-                                <section className="relative h-full w-full overflow-hidden md:rounded-[1.4rem] border border-white/10 bg-white/5 shadow-[0_24px_60px_rgba(0,0,0,0.45)]">
+                                <section className="relative h-full w-full overflow-hidden border border-slate-200 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.18)] md:rounded-2xl">
                                     <video
                                         ref={(element) => {
                                             videoRefs.current[item.id] = element
@@ -166,7 +166,7 @@ export default function HomeReelFeed() {
                                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,7,13,0.18)_0%,rgba(4,7,13,0.06)_35%,rgba(4,7,13,0.82)_100%)]" />
                                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_26%)]" />
 
-                                    <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-red-500 px-3 py-1.5 text-xs font-medium text-white ">
+                                    <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-white/20 bg-white/12 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-md">
                                         <Sparkles size={13} />
                                         {item.headline}
                                     </div>
@@ -174,13 +174,13 @@ export default function HomeReelFeed() {
                                     <button
                                         type="button"
                                         onClick={() => void togglePlayback(item.id)}
-                                        className="absolute left-1/2 top-[42%] flex h-[4.5rem] w-[4.5rem] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow-[0_12px_36px_rgba(0,0,0,0.42)] backdrop-blur-md transition-transform hover:scale-105"
+                                        className="absolute left-1/2 top-[42%] flex h-[3.8rem] w-[3.8rem] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white shadow-[0_12px_36px_rgba(0,0,0,0.42)] backdrop-blur-md transition-transform hover:scale-105"
                                         aria-label={isPlaying ? "Pause highlight" : "Play highlight"}
                                     >
                                         {isPlaying ? (
-                                            <Pause className="size-8 fill-current" />
+                                            <Pause className=" fill-current" />
                                         ) : (
-                                            <Play className="ml-1 size-8 fill-current" />
+                                            <Play className="ml-1  fill-current" />
                                         )}
                                     </button>
 
@@ -237,7 +237,7 @@ export default function HomeReelFeed() {
                                                     key={stat.label}
                                                     className="flex w-16 flex-col items-center gap-1.5"
                                                 >
-                                                    <div className="flex h-13 w-13 items-center justify-center rounded-xl border border-white/12 bg-black/40 text-white backdrop-blur-md">
+                                                    <div className="flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-xl border border-white/12 bg-black/40 text-white backdrop-blur-md">
                                                         <Icon size={20} />
                                                     </div>
                                                     <span className="text-xs font-medium text-white">

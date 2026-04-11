@@ -25,7 +25,7 @@ export default function BottomBar() {
 
     return (
         <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50">
-            <nav className="pointer-events-auto flex w-full items-center justify-between md:rounded-t-[2rem] border-t border-slate-200/80 bg-white px-2 text-slate-700 shadow-[0_-10px_35px_rgba(15,23,42,0.14)] sm:px-6">
+            <nav className="pointer-events-auto flex w-full items-center justify-between md:rounded-t-[2rem] border-t border-slate-200/80 bg-white px-2 text-slate-700 shadow-[0_-10px_35px_rgba(15,23,42,0.10)] sm:px-6">
                 {navItems.map((item) => {
                     const Icon = item.icon
                     const isActive =

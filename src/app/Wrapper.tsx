@@ -8,7 +8,7 @@ interface Props {
 
 export default function Wrapper({ children }: Props) {
     return (
-        <div className="relative min-h-svh bg-[#050816] text-white">
+        <div className="relative min-h-svh bg-white text-slate-900">
             {children}
             <BottomBar />
         </div>
