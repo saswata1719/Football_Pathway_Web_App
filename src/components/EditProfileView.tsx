@@ -49,7 +49,7 @@ export default function EditProfileView() {
                         </div>
                     </div>
                     <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
-                        Live Profile
+                        Profile
                     </div>
                 </section>
 
@@ -180,10 +180,10 @@ export default function EditProfileView() {
 
                         <FieldGroup>
                             <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                <p className="text-xs font-medium mt-3 uppercase tracking-wider text-slate-400">
                                     Profile Bio
                                 </p>
-                                <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                                <h2 className="text-lg font-semibold text-slate-900">
                                     About You
                                 </h2>
                             </div>
@@ -204,10 +204,10 @@ export default function EditProfileView() {
 
                         <FieldGroup>
                             <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
                                     Preferences
                                 </p>
-                                <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                                <h2 className=" text-lg font-semibold text-slate-900">
                                     Profile Highlights
                                 </h2>
                             </div>

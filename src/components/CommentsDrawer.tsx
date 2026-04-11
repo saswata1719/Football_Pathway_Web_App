@@ -17,20 +17,24 @@ interface CommentsDrawerProps {
     isVisible: boolean
     isOpen: boolean
     onClose: () => void
+    zIndexClass?: string
 }
+
+export type { CommentItem }
 
 export default function CommentsDrawer({
     comments,
     isVisible,
     isOpen,
     onClose,
+    zIndexClass = "z-[60]",
 }: CommentsDrawerProps) {
     if (!isOpen) {
         return null
     }
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-end">
+        <div className={`fixed inset-0 ${zIndexClass} flex items-end`}>
             <button
                 type="button"
                 className="absolute inset-0"
