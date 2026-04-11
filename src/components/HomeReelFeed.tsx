@@ -1,11 +1,10 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
     Heart,
     MapPin,
     MessageCircle,
-    Pause,
     Play,
     Share2,
     Sparkles,
@@ -159,6 +158,8 @@ export default function HomeReelFeed() {
     const [activeCommentsFor, setActiveCommentsFor] = useState<string | null>(null)
     const [isCommentsVisible, setIsCommentsVisible] = useState(false)
     const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
+    const articleRefs = useRef<Record<string, HTMLElement | null>>({})
+    const feedRef = useRef<HTMLDivElement | null>(null)
 
     const pauseAllVideos = (exceptId?: string) => {
         Object.entries(videoRefs.current).forEach(([videoId, videoElement]) => {
@@ -191,6 +192,54 @@ export default function HomeReelFeed() {
         }
     }
 
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const mostVisibleEntry = entries
+                    .filter((entry) => entry.isIntersecting)
+                    .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0]
+
+                if (!mostVisibleEntry) {
+                    return
+                }
+
+                const nextId = mostVisibleEntry.target.getAttribute("data-reel-id")
+
+                if (!nextId) {
+                    return
+                }
+
+                pauseAllVideos(nextId)
+
+                const nextVideo = videoRefs.current[nextId]
+
+                if (!nextVideo) {
+                    return
+                }
+
+                void nextVideo.play()
+                    .then(() => {
+                        setPlayingId(nextId)
+                    })
+                    .catch(() => {
+                        setPlayingId(null)
+                    })
+            },
+            {
+                root: feedRef.current,
+                threshold: [0.6, 0.8],
+            }
+        )
+
+        Object.values(articleRefs.current).forEach((article) => {
+            if (article) {
+                observer.observe(article)
+            }
+        })
+
+        return () => observer.disconnect()
+    }, [])
+
     const openComments = (id: string) => {
         pauseAllVideos()
         setPlayingId(null)
@@ -215,11 +264,8 @@ export default function HomeReelFeed() {
         <main className="h-svh overflow-hidden bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] sm:px-4 sm:pt-5">
             <div className="mx-auto md:h-[calc(100svh-7.5rem)] h-[calc(100svh-4rem)] w-full max-w-md overflow-hidden">
                 <div
+                    ref={feedRef}
                     className="no-scrollbar h-full snap-y snap-mandatory overflow-y-auto overscroll-y-contain"
-                    onScroll={() => {
-                        pauseAllVideos()
-                        setPlayingId(null)
-                    }}
                 >
                     {reelItems.map((item) => {
                         const isPlaying = playingId === item.id
@@ -227,6 +273,10 @@ export default function HomeReelFeed() {
                         return (
                             <article
                                 key={item.id}
+                                ref={(element) => {
+                                    articleRefs.current[item.id] = element
+                                }}
+                                data-reel-id={item.id}
                                 className="flex md:h-[calc(100svh-7.5rem)] h-[calc(100svh-4rem)] md:rounded-2xl overflow-hidden snap-start items-center"
                             >
                                 <section className="relative h-full w-full overflow-hidden border border-slate-200 bg-white shadow-[0_20px_45px_rgba(15,23,42,0.18)] md:rounded-2xl">
@@ -238,6 +288,7 @@ export default function HomeReelFeed() {
                                         controls={false}
                                         controlsList="nodownload noplaybackrate"
                                         disablePictureInPicture
+                                        autoPlay
                                         loop
                                         muted
                                         playsInline
@@ -254,7 +305,7 @@ export default function HomeReelFeed() {
                                         <source src={demoVideo.source} type="video/mp4" />
                                     </video>
 
-                                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,7,13,0.18)_0%,rgba(4,7,13,0.06)_35%,rgba(4,7,13,0.82)_100%)]" />
+                                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,7,13,0)_0%,rgba(4,7,13,0)_58%,rgba(4,7,13,0.18)_72%,rgba(4,7,13,0.82)_100%)]" />
                                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_26%)]" />
 
                                     <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-white/20 bg-white/12 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-md">
@@ -262,18 +313,16 @@ export default function HomeReelFeed() {
                                         {item.headline}
                                     </div>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => void togglePlayback(item.id)}
-                                        className="absolute left-1/2 top-[42%] flex h-[3.8rem] w-[3.8rem] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white shadow-[0_12px_36px_rgba(0,0,0,0.42)] backdrop-blur-md transition-transform hover:scale-105"
-                                        aria-label={isPlaying ? "Pause highlight" : "Play highlight"}
-                                    >
-                                        {isPlaying ? (
-                                            <Pause className=" fill-current" />
-                                        ) : (
+                                    {!isPlaying && (
+                                        <button
+                                            type="button"
+                                            onClick={() => void togglePlayback(item.id)}
+                                            className="absolute left-1/2 top-[42%] flex h-[3.8rem] w-[3.8rem] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white shadow-[0_12px_36px_rgba(0,0,0,0.42)] backdrop-blur-md transition-transform hover:scale-105"
+                                            aria-label="Play highlight"
+                                        >
                                             <Play className="ml-1  fill-current" />
-                                        )}
-                                    </button>
+                                        </button>
+                                    )}
 
                                     <div className="absolute bottom-5 left-5 right-20">
                                         <div className="flex items-center gap-2">
