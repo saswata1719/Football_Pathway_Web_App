@@ -29,6 +29,14 @@ interface VideoPreviewDialogProps {
     onClose: () => void
 }
 
+type ActionItem = {
+    key: string
+    label: string
+    value: string
+    icon: typeof Heart
+    onClick?: () => void
+}
+
 export type { VideoPreviewItem }
 
 export default function VideoPreviewDialog({
@@ -64,7 +72,7 @@ export default function VideoPreviewDialog({
         onClose()
     }
 
-    const actionItems = [
+    const actionItems: ActionItem[] = [
         { key: "likes", label: "Likes", value: item.likes ?? "0", icon: Heart },
         {
             key: "comments",
@@ -74,7 +82,7 @@ export default function VideoPreviewDialog({
             onClick: openComments,
         },
         { key: "shares", label: "Shares", value: item.shares ?? "0", icon: Share2 },
-    ] as const
+    ]
 
     return (
         <>
@@ -93,13 +101,13 @@ export default function VideoPreviewDialog({
                 />
 
                 <section
-                    className={`relative z-10 w-full max-w-3xl rounded-t-[1.75rem] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] transition-all duration-300 ease-out md:rounded-[1.75rem] ${
+                    className={`relative z-10 w-full max-w-3xl rounded-t-[1.75rem] bg-transparent transition-all duration-300 ease-out md:rounded-[1.75rem] md:bg-white md:shadow-[0_24px_60px_rgba(15,23,42,0.18)] ${
                         isVisible
                             ? "translate-y-0 opacity-100 md:scale-100"
                             : "translate-y-full opacity-0 md:translate-y-6 md:scale-[0.98]"
                     }`}
                 >
-                    <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 md:px-5">
+                    <div className="hidden items-center justify-between border-b border-slate-200 px-4 py-4 md:flex md:px-5">
                         <div>
                             <h2 className="text-lg font-semibold text-slate-900">
                                 {item.title}
@@ -118,13 +126,24 @@ export default function VideoPreviewDialog({
                         </button>
                     </div>
 
-                    <div className="flex flex-col gap-5 p-4 md:flex-row md:p-5">
-                        <div className="flex justify-center">
-                            <div className="w-full max-w-[16rem] overflow-hidden rounded-[1.35rem] border border-slate-200 bg-black">
+                    <div className="flex flex-col gap-5 p-0 md:flex-row md:p-5">
+                        <div className="flex justify-center md:block">
+                            <div className="relative w-full overflow-hidden bg-black md:max-w-[16rem] md:rounded-[1.35rem] md:border md:border-slate-200">
+                                <button
+                                    type="button"
+                                    onClick={handleDialogClose}
+                                    className="absolute right-3 top-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/35 text-white backdrop-blur-md md:hidden"
+                                    aria-label="Close video dialog"
+                                >
+                                    <X className="size-4.5" />
+                                </button>
+
                                 <div className="relative aspect-[9/16] w-full bg-black">
                                     <video
                                         className="h-full w-full object-contain bg-black"
-                                        controls
+                                        autoPlay
+                                        loop
+                                        muted
                                         playsInline
                                         poster={item.poster}
                                         preload="metadata"
@@ -133,20 +152,82 @@ export default function VideoPreviewDialog({
                                     </video>
 
                                     {item.duration && (
-                                        <div className="absolute right-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                                        <div className="absolute right-3 top-3 hidden rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm md:block">
                                             {item.duration}
                                         </div>
                                     )}
                                     {item.badge && (
-                                        <div className="absolute left-3 top-3 rounded-full bg-white/14 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                                        <div className="absolute left-3 top-3 hidden rounded-full bg-white/14 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm md:block">
                                             {item.badge}
                                         </div>
                                     )}
+
+                                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08)_0%,rgba(0,0,0,0)_35%,rgba(0,0,0,0.82)_100%)] md:hidden" />
+
+                                    <div className="absolute bottom-4 left-4 right-20 md:hidden">
+                                        <div className="space-y-1">
+                                            <h2 className="text-base font-semibold text-white">
+                                                {item.title}
+                                            </h2>
+                                            {item.subtitle && (
+                                                <p className="text-sm text-white/82">
+                                                    {item.subtitle}
+                                                </p>
+                                            )}
+                                            {item.location && (
+                                                <div className="flex items-center gap-1.5 text-xs text-white/75">
+                                                    <MapPin className="size-3.5" />
+                                                    {item.location}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <aside className="absolute bottom-4 right-2 flex flex-col items-center gap-4 md:hidden">
+                                        {actionItems.map((action) => {
+                                            const Icon = action.icon
+
+                                            if (action.onClick) {
+                                                return (
+                                                    <div
+                                                        key={action.key}
+                                                        className="flex w-16 flex-col items-center gap-1.5"
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            onClick={action.onClick}
+                                                            className="flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-xl border border-white/12 bg-black/40 text-white backdrop-blur-md transition-colors hover:bg-black/55"
+                                                            aria-label={`Open ${action.label.toLowerCase()}`}
+                                                        >
+                                                            <Icon size={20} />
+                                                        </button>
+                                                        <span className="text-xs font-medium text-white">
+                                                            {action.value}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            }
+
+                                            return (
+                                                <div
+                                                    key={action.key}
+                                                    className="flex w-16 flex-col items-center gap-1.5"
+                                                >
+                                                    <div className="flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-xl border border-white/12 bg-black/40 text-white backdrop-blur-md">
+                                                        <Icon size={20} />
+                                                    </div>
+                                                    <span className="text-xs font-medium text-white">
+                                                        {action.value}
+                                                    </span>
+                                                </div>
+                                            )
+                                        })}
+                                    </aside>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="min-w-0 flex-1 space-y-4">
+                        <div className="hidden min-w-0 flex-1 space-y-4 md:block">
                             <div className="grid grid-cols-3 gap-2">
                                 {actionItems.map((action) => {
                                     const Icon = action.icon

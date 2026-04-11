@@ -14,9 +14,9 @@ import { RiVerifiedBadgeFill } from "react-icons/ri"
 import CommentsDrawer from "@/components/CommentsDrawer"
 
 const demoVideo = {
-    source: "https://www.pexels.com/download/video/32305343/",
+    source: "https://www.pexels.com/download/video/31511131/",
     poster:
-        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1200&auto=format&fit=crop",
+        "https://images.pexels.com/photos/159594/soccer-football-player-sport-159594.jpeg",
     reference:
         "https://www.pexels.com/video/woman-enjoying-scenic-ocean-view-on-a-cliff-32305343/",
 }

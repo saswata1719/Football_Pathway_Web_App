@@ -167,7 +167,7 @@ export default function ProfileView() {
             views: video.plays,
             duration: video.duration,
             poster: video.image,
-            videoUrl: "https://www.pexels.com/download/video/32305343/",
+            videoUrl: "https://www.pexels.com/download/video/31511131/",
             badge: "Uploaded Reel",
             description: video.description,
             likes: video.likes,
