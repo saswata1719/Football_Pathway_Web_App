@@ -41,6 +41,7 @@ export function SignupForm({
     const router = useRouter()
     const [formData, setFormData] = useState<SignupFormState>(initialFormState)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
 
@@ -81,12 +82,15 @@ export function SignupForm({
     }
 
     const handleGoogleSignup = async () => {
+        setIsGoogleLoading(true)
+
         try {
             await authClient.signIn.social({
                 provider: "google",
                 callbackURL: "/",
             })
         } catch {
+            setIsGoogleLoading(false)
             toast("Unable to continue with Google right now.")
         }
     }
@@ -168,9 +172,14 @@ export function SignupForm({
                 </Field>
                 <FieldSeparator>Or continue with</FieldSeparator>
                 <Field>
-                    <Button variant="outline" type="button" onClick={handleGoogleSignup}>
-                        <CgGoogle />
-                        Sign up with Google
+                    <Button
+                        variant="outline"
+                        type="button"
+                        onClick={handleGoogleSignup}
+                        disabled={isGoogleLoading}
+                    >
+                        {isGoogleLoading ? <Spinner className="size-4" /> : <CgGoogle />}
+                        {isGoogleLoading ? "Please wait..." : "Sign up with Google"}
                     </Button>
                     <FieldDescription className="text-center !mt-2">
                         Already have an account?{" "}

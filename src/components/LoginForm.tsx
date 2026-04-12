@@ -37,6 +37,7 @@ export function LoginForm({
     const router = useRouter()
     const [formData, setFormData] = useState<LoginFormState>(initialFormState)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = event.target
@@ -68,12 +69,15 @@ export function LoginForm({
     }
 
     const handleGoogleLogin = async () => {
+        setIsGoogleLoading(true)
+
         try {
             await authClient.signIn.social({
                 provider: "google",
                 callbackURL: "/",
             })
         } catch {
+            setIsGoogleLoading(false)
             toast("Unable to continue with Google right now.")
         }
     }
@@ -120,9 +124,14 @@ export function LoginForm({
                 </Field>
                 <FieldSeparator>Or continue with</FieldSeparator>
                 <Field>
-                    <Button variant="outline" type="button" onClick={handleGoogleLogin}>
-                        <CgGoogle />
-                        Login with Google
+                    <Button
+                        variant="outline"
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        disabled={isGoogleLoading}
+                    >
+                        {isGoogleLoading ? <Spinner className="size-4" /> : <CgGoogle />}
+                        {isGoogleLoading ? "Please wait..." : "Login with Google"}
                     </Button>
                     <FieldDescription className="text-center !mt-2">
                         Don&apos;t have an account?{" "}
