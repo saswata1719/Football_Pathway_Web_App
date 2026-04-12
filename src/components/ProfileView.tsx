@@ -19,7 +19,11 @@ export default function ProfileView() {
         queryKey: ["profile"],
         queryFn: () => getProfile(),
     })
-    const { data: posts = [], isLoading: isPostsLoading, isError: isPostsError } = useQuery({
+    const {
+        data: posts = [],
+        isLoading: isPostsLoading,
+        isError: isPostsError,
+    } = useQuery<PostItem[]>({
         queryKey: ["posts"],
         queryFn: () => getPosts(),
     })
