@@ -200,7 +200,7 @@ export default function VideoPreviewDialog({
     }
 
     const handleLike = () => {
-        if (!activeItem.postId) {
+        if (!activeItem?.postId) {
             return
         }
 
@@ -208,7 +208,7 @@ export default function VideoPreviewDialog({
     }
 
     const handleShare = () => {
-        if (!activeItem.postId) {
+        if (!activeItem?.postId) {
             return
         }
 
