@@ -5,7 +5,9 @@ import axios from "axios"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { CgGoogle } from "react-icons/cg"
+import { toast } from "sonner"
 
+import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -75,6 +77,17 @@ export function SignupForm({
             }
         } finally {
             setIsSubmitting(false)
+        }
+    }
+
+    const handleGoogleSignup = async () => {
+        try {
+            await authClient.signIn.social({
+                provider: "google",
+                callbackURL: "/",
+            })
+        } catch {
+            toast("Unable to continue with Google right now.")
         }
     }
 
@@ -155,7 +168,7 @@ export function SignupForm({
                 </Field>
                 <FieldSeparator>Or continue with</FieldSeparator>
                 <Field>
-                    <Button variant="outline" type="button">
+                    <Button variant="outline" type="button" onClick={handleGoogleSignup}>
                         <CgGoogle />
                         Sign up with Google
                     </Button>

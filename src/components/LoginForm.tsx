@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { CgGoogle } from "react-icons/cg"
 import { toast } from "sonner"
 
+import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -66,6 +67,17 @@ export function LoginForm({
         }
     }
 
+    const handleGoogleLogin = async () => {
+        try {
+            await authClient.signIn.social({
+                provider: "google",
+                callbackURL: "/",
+            })
+        } catch {
+            toast("Unable to continue with Google right now.")
+        }
+    }
+
     return (
         <form
             className={cn("flex flex-col gap-6", className)}
@@ -108,7 +120,7 @@ export function LoginForm({
                 </Field>
                 <FieldSeparator>Or continue with</FieldSeparator>
                 <Field>
-                    <Button variant="outline" type="button">
+                    <Button variant="outline" type="button" onClick={handleGoogleLogin}>
                         <CgGoogle />
                         Login with Google
                     </Button>
