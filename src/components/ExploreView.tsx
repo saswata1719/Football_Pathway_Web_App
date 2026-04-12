@@ -304,21 +304,21 @@ export default function ExploreView() {
                                 </SelectContent>
                             </Select>
 
-                            <Select defaultValue="all-skills">
+                            <Select defaultValue="all-clubs">
                                 <SelectTrigger className="w-full">
                                     <div className="flex items-center gap-2">
                                         <Star className="size-4" />
-                                        <SelectValue placeholder="Skill Type" />
+                                        <SelectValue placeholder="Club" />
                                     </div>
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectGroup>
-                                        <SelectLabel>Skill Type</SelectLabel>
-                                        <SelectItem value="all-skills">Skill Type</SelectItem>
-                                        <SelectItem value="finishing">Finishing</SelectItem>
-                                        <SelectItem value="dribbling">Dribbling</SelectItem>
-                                        <SelectItem value="passing">Passing</SelectItem>
-                                        <SelectItem value="defending">Defending</SelectItem>
+                                        <SelectLabel>Club</SelectLabel>
+                                        <SelectItem value="all-clubs">Club</SelectItem>
+                                        <SelectItem value="mumbai-city">Mumbai City FC</SelectItem>
+                                        <SelectItem value="goa-fc">FC Goa</SelectItem>
+                                        <SelectItem value="mohun-bagan">Mohun Bagan</SelectItem>
+                                        <SelectItem value="bengaluru-fc">Bengaluru FC</SelectItem>
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>

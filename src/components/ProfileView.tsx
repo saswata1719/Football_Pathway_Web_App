@@ -1,10 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Heart, MapPin, Settings } from "lucide-react"
 import Link from "next/link"
 import { RiVerifiedBadgeFill } from "react-icons/ri"
 
+import { getProfile } from "@/lib/api/profile"
 import VideoPreviewDialog, { type VideoPreviewItem } from "@/components/VideoPreviewDialog"
 
 const profileStats = [
@@ -157,6 +159,10 @@ const videoGrid = [
 export default function ProfileView() {
     const [selectedVideo, setSelectedVideo] = useState<VideoPreviewItem | null>(null)
     const [isDialogVisible, setIsDialogVisible] = useState(false)
+    const { data: profile, isLoading, isError } = useQuery({
+        queryKey: ["profile"],
+        queryFn: () => getProfile(),
+    })
 
     const openVideoDialog = (video: (typeof videoGrid)[number]) => {
         setSelectedVideo({
@@ -174,6 +180,7 @@ export default function ProfileView() {
             commentsCount: video.commentsCount,
             shares: video.shares,
             commentsData: video.commentsData,
+            showDeleteAction: true,
         })
         requestAnimationFrame(() => {
             requestAnimationFrame(() => setIsDialogVisible(true))
@@ -183,6 +190,53 @@ export default function ProfileView() {
     const closeVideoDialog = () => {
         setIsDialogVisible(false)
         window.setTimeout(() => setSelectedVideo(null), 220)
+    }
+
+    const profileImage = profile?.image || "/user_placeholder.jpg"
+    const profileName = profile?.fullName || "Player name"
+    const profileLocation = profile?.location || "Location not added"
+    const profileBio = profile?.bio?.trim() || "No bio added yet."
+    const positionLabel = profile?.position
+        ? `${profile.position.charAt(0).toUpperCase()}${profile.position.slice(1)}`
+        : ""
+    const ageLabel = profile?.age ? String(profile.age) : ""
+    const profileRoleLine =
+        positionLabel && ageLabel
+            ? `${ageLabel} | ${positionLabel}`
+            : positionLabel || ageLabel || "Player profile"
+    const profileStatsData = [
+        { label: profileStats[0].label, value: String(profile?.stats?.totalVideos ?? 0) },
+        { label: profileStats[1].label, value: String(profile?.stats?.highlights ?? 0) },
+        { label: profileStats[2].label, value: String(profile?.stats?.matchClips ?? 0) },
+    ]
+
+    if (isLoading) {
+        return (
+            <main className="min-h-svh bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] px-4 pb-28 pt-3 sm:px-6 md:pt-5">
+                <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
+                    <section className="rounded-2xl border border-slate-200 bg-white p-6 animate-pulse">
+                        <div className="flex items-center gap-4">
+                            <div className="h-24 w-24 rounded-full bg-slate-200" />
+                            <div className="flex-1 space-y-3">
+                                <div className="h-5 w-40 rounded bg-slate-200" />
+                                <div className="h-4 w-32 rounded bg-slate-200" />
+                                <div className="h-4 w-28 rounded bg-slate-200" />
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        )
+    }
+
+    if (isError) {
+        return (
+            <main className="min-h-svh bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] px-4 pb-28 pt-3 sm:px-6 md:pt-5">
+                <div className="mx-auto max-w-2xl rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-600">
+                    Unable to load profile right now.
+                </div>
+            </main>
+        )
     }
 
     return (
@@ -197,23 +251,24 @@ export default function ProfileView() {
                                         aria-hidden="true"
                                         className="h-18 w-18 rounded-full border-4 border-white bg-cover bg-center md:h-24 md:w-24"
                                         style={{
-                                            backgroundImage:
-                                                "url('https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=800&auto=format&fit=crop&q=80')",
+                                            backgroundImage: `url('${profileImage}')`,
                                         }}
                                     />
                                     <div className="pb-2">
                                         <div className="flex items-center gap-1.5">
                                             <h1 className="font-semibold tracking-tight text-slate-900 md:text-xl">
-                                                Saswata Roy
+                                                {profileName}
                                             </h1>
-                                            <RiVerifiedBadgeFill className="size-4 fill-sky-500 text-sky-500" />
+                                            {profile?.isVerified && (
+                                                <RiVerifiedBadgeFill className="size-4 fill-sky-500 text-sky-500" />
+                                            )}
                                         </div>
                                         <p className="mt-1 text-sm font-medium text-slate-600">
-                                            27 | Striker
+                                            {profileRoleLine}
                                         </p>
                                         <div className="md:mt-1 flex items-center gap-1 text-sm text-slate-500">
                                             <MapPin className="size-3.5" />
-                                            Mumbai, India
+                                            {profileLocation}
                                         </div>
                                     </div>
                                 </div>
@@ -232,12 +287,11 @@ export default function ProfileView() {
                             </div>
 
                             <p className="mt-4 text-sm text-slate-600 md:leading-6">
-                                Aggressive forward with sharp movement in the box, strong
-                                finishing instincts, and a calm first touch under pressure.
+                                {profileBio}
                             </p>
 
                             <div className="mt-5 grid grid-cols-3 gap-2 md:gap-3">
-                                {profileStats.map((stat) => (
+                                {profileStatsData.map((stat) => (
                                     <div
                                         key={stat.label}
                                         className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-center"
@@ -272,7 +326,7 @@ export default function ProfileView() {
                                     key={video.id}
                                     type="button"
                                     onClick={() => openVideoDialog(video)}
-                                    className="group overflow-hidden rounded-xl bg-slate-100 text-left"
+                                    className="group w-full overflow-hidden rounded-xl bg-slate-100 text-left"
                                 >
                                     <div
                                         aria-hidden="true"

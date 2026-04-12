@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 
 import { AUTH_COOKIE_NAME, createAuthToken } from "@/lib/auth-session"
 import { DBconnection } from "@/lib/DbConnection"
+import { ensureUserProfile } from "@/lib/profile"
 import { USerModel } from "@/models/UserModel"
 
 type LoginRequestBody = {
@@ -57,6 +58,8 @@ export async function POST(request: Request) {
             email: user.email,
         })
 
+        const profile = await ensureUserProfile(user)
+
         const response = NextResponse.json(
             {
                 success: true,
@@ -67,6 +70,7 @@ export async function POST(request: Request) {
                     email: user.email,
                     provider: user.provider,
                 },
+                profile,
             },
             { status: 200 }
         )

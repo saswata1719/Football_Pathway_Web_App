@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Eye, Heart, MapPin, MessageCircle, Play, Share2, X } from "lucide-react"
+import { Eye, Heart, MapPin, MessageCircle, Play, Share2, Trash2, X } from "lucide-react"
 
 import CommentsDrawer, { type CommentItem } from "@/components/CommentsDrawer"
+import { Button } from "./ui/button"
 
 type VideoPreviewItem = {
     id: string
@@ -20,6 +21,7 @@ type VideoPreviewItem = {
     commentsCount?: string
     shares?: string
     commentsData?: CommentItem[]
+    showDeleteAction?: boolean
 }
 
 interface VideoPreviewDialogProps {
@@ -223,11 +225,35 @@ export default function VideoPreviewDialog({
                                             )
                                         })}
                                     </aside>
+
+                                    {item.showDeleteAction && (
+                                        <button
+                                            type="button"
+                                            className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/12 bg-red-500 px-3 py-2 text-xs font-medium text-white backdrop-blur-md md:hidden"
+                                            aria-label="Delete uploaded reel"
+                                        >
+                                            <Trash2 className="size-3.5" />
+                                            Delete
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
                         <div className="hidden min-w-0 flex-1 space-y-4 md:block">
+                            {item.showDeleteAction && (
+                                <div className="flex justify-end">
+                                    <Button
+                                        type="button"
+                                        className="w-full cursor-pointer"
+                                        variant={"destructive"}
+                                    >
+                                        <Trash2 className="size-4" />
+                                        Delete Reel
+                                    </Button>
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-3 gap-2">
                                 {actionItems.map((action) => {
                                     const Icon = action.icon
@@ -275,7 +301,7 @@ export default function VideoPreviewDialog({
                                     </div>
                                     <div className="min-w-0">
                                         <p className="text-sm font-semibold text-slate-900">
-                                            Video Details
+                                            Caption
                                         </p>
                                         {item.description && (
                                             <p className="mt-1 text-sm leading-6 text-slate-600">

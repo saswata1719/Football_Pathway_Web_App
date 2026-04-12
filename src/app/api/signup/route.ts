@@ -1,6 +1,7 @@
 import bcryptjs from "bcryptjs"
 
 import { DBconnection } from "@/lib/DbConnection"
+import { ensureUserProfile } from "@/lib/profile"
 import { USerModel } from "@/models/UserModel"
 
 type SignupRequestBody = {
@@ -68,6 +69,8 @@ export async function POST(request: Request) {
             password: await bcryptjs.hash(password, 10),
             provider: "credentials",
         })
+
+        await ensureUserProfile(user)
 
         return Response.json(
             {
