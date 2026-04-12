@@ -13,8 +13,10 @@ import {
     getPostById,
     getPostComments,
     sharePost,
+    trackPostView,
     togglePostLike,
 } from "@/lib/api/post"
+import { hasViewedPostInSession, markPostAsViewedInSession } from "@/lib/post-view"
 import { Button } from "./ui/button"
 
 type VideoPreviewItem = {
@@ -70,12 +72,14 @@ export default function VideoPreviewDialog({
     const [likesCount, setLikesCount] = useState(activeItem?.likes ?? "0")
     const [commentsCount, setCommentsCount] = useState(activeItem?.commentsCount ?? "0")
     const [sharesCount, setSharesCount] = useState(activeItem?.shares ?? "0")
+    const [viewsCount, setViewsCount] = useState(activeItem?.views ?? "0")
     const [isLiked, setIsLiked] = useState(false)
 
     useEffect(() => {
         setLikesCount(activeItem?.likes ?? "0")
         setCommentsCount(activeItem?.commentsCount ?? "0")
         setSharesCount(activeItem?.shares ?? "0")
+        setViewsCount(activeItem?.views ?? "0")
         setIsLiked(false)
         setIsShareVisible(false)
         setIsDeleteDialogOpen(false)
@@ -102,8 +106,28 @@ export default function VideoPreviewDialog({
         setLikesCount(String(livePost.stats?.likes ?? 0))
         setCommentsCount(String(livePost.stats?.comments ?? 0))
         setSharesCount(String(livePost.stats?.shares ?? 0))
+        setViewsCount(String(livePost.stats?.views ?? 0))
         setIsLiked(Boolean(livePost.likedByCurrentUser))
     }, [livePost])
+
+    useEffect(() => {
+        if (!activeItem?.postId || !isOpen || hasViewedPostInSession(activeItem.postId)) {
+            return
+        }
+
+        markPostAsViewedInSession(activeItem.postId)
+
+        void trackPostView(activeItem.postId)
+            .then((data) => {
+                setViewsCount(String(data.views))
+                queryClient.invalidateQueries({ queryKey: ["post", activeItem.postId] })
+                queryClient.invalidateQueries({ queryKey: ["posts"] })
+                queryClient.invalidateQueries({ queryKey: ["feed"] })
+                queryClient.invalidateQueries({ queryKey: ["explore"] })
+                queryClient.invalidateQueries({ queryKey: ["performance"] })
+            })
+            .catch(() => {})
+    }, [activeItem?.postId, isOpen, queryClient])
 
     const likeMutation = useMutation({
         mutationFn: async () => {
@@ -567,10 +591,10 @@ export default function VideoPreviewDialog({
                                         {activeItem.location}
                                     </div>
                                 )}
-                                {activeItem.views && (
+                                {viewsCount && (
                                     <div className="flex items-center gap-2 text-sm text-slate-600">
                                         <Eye className="size-4 text-slate-400" />
-                                        {activeItem.views} views
+                                        {viewsCount} views
                                     </div>
                                 )}
                                 {activeItem.badge && (

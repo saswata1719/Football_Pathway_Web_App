@@ -110,3 +110,15 @@ export async function deletePost(postId: string) {
 
     return res.data
 }
+
+export async function trackPostView(postId: string) {
+    const res = await axios.post(`/api/post/${postId}/view`)
+
+    if (!res.data?.success) {
+        throw new Error(res.data?.message || "Failed to update view")
+    }
+
+    return {
+        views: res.data.views as number,
+    }
+}

@@ -1,9 +1,11 @@
 "use client"
 
-import { useQuery } from "@tanstack/react-query"
+import { useEffect, useState } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Eye, Heart, MapPin, MessageCircle, Share2 } from "lucide-react"
 
-import { getPostById, getPostComments } from "@/lib/api/post"
+import { getPostById, getPostComments, trackPostView } from "@/lib/api/post"
+import { hasViewedPostInSession, markPostAsViewedInSession } from "@/lib/post-view"
 import { Spinner } from "@/components/ui/spinner"
 
 type SharedVideoViewProps = {
@@ -11,15 +13,36 @@ type SharedVideoViewProps = {
 }
 
 export default function SharedVideoView({ postId }: SharedVideoViewProps) {
+    const queryClient = useQueryClient()
     const { data: post, isLoading, isError } = useQuery({
         queryKey: ["shared-post", postId],
         queryFn: () => getPostById(postId),
     })
+    const [trackedViewsCount, setTrackedViewsCount] = useState<number | null>(null)
+
     const { data: comments = [] } = useQuery({
         queryKey: ["shared-post-comments", postId],
         queryFn: () => getPostComments(postId),
         enabled: Boolean(post),
     })
+
+    useEffect(() => {
+        if (!postId || hasViewedPostInSession(postId)) {
+            return
+        }
+
+        markPostAsViewedInSession(postId)
+
+        void trackPostView(postId)
+            .then((data) => {
+                setTrackedViewsCount(data.views)
+                queryClient.invalidateQueries({ queryKey: ["shared-post", postId] })
+                queryClient.invalidateQueries({ queryKey: ["feed"] })
+                queryClient.invalidateQueries({ queryKey: ["explore"] })
+                queryClient.invalidateQueries({ queryKey: ["performance"] })
+            })
+            .catch(() => {})
+    }, [postId, queryClient])
 
     if (isLoading) {
         return (
@@ -43,6 +66,7 @@ export default function SharedVideoView({ postId }: SharedVideoViewProps) {
     }
 
     const positionLabel = `${post.position.charAt(0).toUpperCase()}${post.position.slice(1)}`
+    const viewsCount = trackedViewsCount ?? (post.stats?.views ?? 0)
 
     return (
         <main className="min-h-svh bg-[linear-gradient(180deg,_#ffffff_0%,_#f8fafc_100%)] px-4 py-6">
@@ -80,7 +104,7 @@ export default function SharedVideoView({ postId }: SharedVideoViewProps) {
                                 <span className="text-xs font-medium">Views</span>
                             </div>
                             <p className="mt-2 text-lg font-semibold text-slate-900">
-                                {post.stats?.views ?? 0}
+                                {viewsCount}
                             </p>
                         </div>
                         <div className="rounded-2xl border border-slate-200 bg-white p-4">

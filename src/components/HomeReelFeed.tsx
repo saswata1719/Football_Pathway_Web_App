@@ -8,8 +8,15 @@ import { toast } from "sonner"
 
 import CommentsDrawer from "@/components/CommentsDrawer"
 import { getFeed } from "@/lib/api/feed"
-import { addPostComment, getPostComments, sharePost, togglePostLike } from "@/lib/api/post"
+import {
+    addPostComment,
+    getPostComments,
+    sharePost,
+    togglePostLike,
+    trackPostView,
+} from "@/lib/api/post"
 import type { FeedItem } from "@/lib/api/feed"
+import { hasViewedPostInSession, markPostAsViewedInSession } from "@/lib/post-view"
 
 const statMeta = [
     { key: "likes", icon: Heart, label: "Likes" },
@@ -199,6 +206,18 @@ export default function HomeReelFeed() {
                     .catch(() => {
                         setPlayingId(null)
                     })
+
+                if (!hasViewedPostInSession(nextId)) {
+                    markPostAsViewedInSession(nextId)
+
+                    void trackPostView(nextId)
+                        .then(() => {
+                            queryClient.invalidateQueries({ queryKey: ["feed"] })
+                            queryClient.invalidateQueries({ queryKey: ["explore"] })
+                            queryClient.invalidateQueries({ queryKey: ["performance"] })
+                        })
+                        .catch(() => {})
+                }
             },
             {
                 root: feedRef.current,
@@ -213,7 +232,7 @@ export default function HomeReelFeed() {
         })
 
         return () => observer.disconnect()
-    }, [feed])
+    }, [feed, queryClient])
 
     const openComments = (id: string) => {
         pauseAllVideos()
@@ -353,11 +372,13 @@ export default function HomeReelFeed() {
 
                                     <div className="absolute bottom-5 left-5 right-20">
                                         <div className="flex items-center gap-2">
-                                            <div
-                                                aria-hidden="true"
-                                                className="h-12 w-12 shrink-0 rounded-full bg-cover bg-center"
-                                                style={{
-                                                    backgroundImage: `url('${item.playerImage}')`,
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={item.playerImage || "/user_placeholder.jpg"}
+                                                alt={item.playerName}
+                                                className="h-12 w-12 shrink-0 rounded-full object-cover"
+                                                onError={(event) => {
+                                                    event.currentTarget.src = "/user_placeholder.jpg"
                                                 }}
                                             />
                                             <div className="space-y-1.5">
