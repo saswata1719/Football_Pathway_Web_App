@@ -1,12 +1,12 @@
-import {
-    ImagePlus,
-    MapPin,
-    Tag,
-    Trophy,
-    Upload,
-    Video,
-} from "lucide-react"
+"use client"
 
+import { useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { MapPin, Tag, Trophy, Upload } from "lucide-react"
+import { toast } from "sonner"
+
+import FileUploadField from "@/components/FileUploadField"
+import { createPost, type CreatePostPayload } from "@/lib/api/post"
 import { Button } from "@/components/ui/button"
 import {
     Field,
@@ -25,12 +25,98 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { Spinner } from "@/components/ui/spinner"
+
+type PostFormState = {
+    position: CreatePostPayload["position"]
+    age: string
+    location: string
+    strongFoot: CreatePostPayload["strongFoot"]
+    matchType: CreatePostPayload["matchType"]
+    tags: string
+    caption: string
+    videoUrl: string
+    thumbnailUrl: string
+}
+
+const initialFormState: PostFormState = {
+    position: "striker",
+    age: "",
+    location: "",
+    strongFoot: "right",
+    matchType: "match",
+    tags: "",
+    caption: "",
+    videoUrl: "",
+    thumbnailUrl: "",
+}
 
 export default function PostComposer() {
+    const queryClient = useQueryClient()
+    const [formData, setFormData] = useState<PostFormState>(initialFormState)
+
+    const { mutate, isPending } = useMutation({
+        mutationFn: async (payload: CreatePostPayload) => {
+            return createPost(payload)
+        },
+        onSuccess: async () => {
+            toast.success("Post created successfully")
+            setFormData(initialFormState)
+            await queryClient.invalidateQueries({ queryKey: ["posts"] })
+        },
+        onError: (error: Error) => {
+            toast.error(error.message || "Something went wrong")
+        },
+    })
+
+    const handleInputChange = (
+        event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
+        const { id, value } = event.target
+
+        setFormData((previous) => ({
+            ...previous,
+            [id]: value,
+        }))
+    }
+
+    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+
+        if (!formData.videoUrl || !formData.thumbnailUrl) {
+            toast.error("Please upload video and thumbnail first")
+            return
+        }
+
+        const age = Number(formData.age)
+
+        if (!Number.isFinite(age) || age < 0) {
+            toast.error("Please enter a valid age")
+            return
+        }
+
+        mutate({
+            position: formData.position,
+            age,
+            location: formData.location.trim(),
+            strongFoot: formData.strongFoot,
+            matchType: formData.matchType,
+            caption: formData.caption.trim(),
+            tags: formData.tags
+                .split(/[\s,]+/)
+                .map((tag) => tag.trim())
+                .filter(Boolean),
+            videoUrl: formData.videoUrl,
+            thumbnailUrl: formData.thumbnailUrl,
+        })
+    }
+
+    const previewTags = formData.tags.trim() || "No tags added"
+
     return (
-        <main className="min-h-svh bg-white px-4 pb-28 pt-14 ">
+        <main className="min-h-svh bg-white px-4 pb-28 pt-14">
             <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
-                <section className="">
+                <section>
                     <div className="flex items-start justify-between gap-4">
                         <div>
                             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
@@ -48,13 +134,21 @@ export default function PostComposer() {
                     </div>
                 </section>
 
-                <section className="">
-                    <form className="space-y-5">
+                <section>
+                    <form className="space-y-5" onSubmit={handleSubmit}>
                         <FieldGroup>
                             <div className="grid gap-4 md:grid-cols-2">
                                 <Field>
                                     <FieldLabel htmlFor="position">Position</FieldLabel>
-                                    <Select defaultValue="striker">
+                                    <Select
+                                        value={formData.position}
+                                        onValueChange={(value) =>
+                                            setFormData((previous) => ({
+                                                ...previous,
+                                                position: value as PostFormState["position"],
+                                            }))
+                                        }
+                                    >
                                         <SelectTrigger className="h-10 w-full rounded-lg border-slate-200 bg-white">
                                             <SelectValue placeholder="Select position" />
                                         </SelectTrigger>
@@ -73,7 +167,13 @@ export default function PostComposer() {
 
                                 <Field>
                                     <FieldLabel htmlFor="age">Age</FieldLabel>
-                                    <Input id="age" type="number" placeholder="27" />
+                                    <Input
+                                        id="age"
+                                        type="number"
+                                        placeholder="27"
+                                        value={formData.age}
+                                        onChange={handleInputChange}
+                                    />
                                 </Field>
                             </div>
 
@@ -86,14 +186,24 @@ export default function PostComposer() {
                                             id="location"
                                             type="text"
                                             placeholder="Mumbai, India"
-                                            className=" pl-9"
+                                            value={formData.location}
+                                            onChange={handleInputChange}
+                                            className="pl-9"
                                         />
                                     </div>
                                 </Field>
 
                                 <Field>
-                                    <FieldLabel htmlFor="foot">Strong Foot</FieldLabel>
-                                    <Select defaultValue="right">
+                                    <FieldLabel htmlFor="strongFoot">Strong Foot</FieldLabel>
+                                    <Select
+                                        value={formData.strongFoot}
+                                        onValueChange={(value) =>
+                                            setFormData((previous) => ({
+                                                ...previous,
+                                                strongFoot: value as PostFormState["strongFoot"],
+                                            }))
+                                        }
+                                    >
                                         <SelectTrigger className="h-10 w-full rounded-lg border-slate-200 bg-white">
                                             <SelectValue placeholder="Select strong foot" />
                                         </SelectTrigger>
@@ -112,8 +222,16 @@ export default function PostComposer() {
                             <div className="grid gap-4 md:grid-cols-2">
                                 <Field>
                                     <FieldLabel htmlFor="matchType">Match Type</FieldLabel>
-                                    <Select defaultValue="match">
-                                        <SelectTrigger className=" w-full rounded-lg border-slate-200 bg-white">
+                                    <Select
+                                        value={formData.matchType}
+                                        onValueChange={(value) =>
+                                            setFormData((previous) => ({
+                                                ...previous,
+                                                matchType: value as PostFormState["matchType"],
+                                            }))
+                                        }
+                                    >
+                                        <SelectTrigger className="w-full rounded-lg border-slate-200 bg-white">
                                             <SelectValue placeholder="Select match type" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -135,6 +253,8 @@ export default function PostComposer() {
                                             id="tags"
                                             type="text"
                                             placeholder="#finishing #trial #striker"
+                                            value={formData.tags}
+                                            onChange={handleInputChange}
                                             className="pl-9"
                                         />
                                     </div>
@@ -147,6 +267,8 @@ export default function PostComposer() {
                                     id="caption"
                                     rows={4}
                                     placeholder="Describe the moment, performance, or key action from this clip..."
+                                    value={formData.caption}
+                                    onChange={handleInputChange}
                                     className="w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                                 />
                             </Field>
@@ -156,50 +278,38 @@ export default function PostComposer() {
 
                         <FieldGroup>
                             <div className="grid gap-4 md:grid-cols-2">
-                                <Field>
-                                    <FieldLabel htmlFor="videoUpload">Video Upload</FieldLabel>
-                                    <label
-                                        htmlFor="videoUpload"
-                                        className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center transition-colors hover:border-slate-400 hover:bg-slate-100"
-                                    >
-                                        <Video className="size-8 text-slate-500" />
-                                        <p className="mt-3 text-sm font-semibold text-slate-700">
-                                            Upload Video
-                                        </p>
-                                        <FieldDescription className="!mt-1 text-xs text-center">
-                                            MP4, MOV, or highlight reel clip
-                                        </FieldDescription>
-                                        <input
-                                            id="videoUpload"
-                                            type="file"
-                                            accept="video/*"
-                                            className="sr-only"
-                                        />
-                                    </label>
-                                </Field>
+                                <FileUploadField
+                                    label="Video Upload"
+                                    folder="posts/videos"
+                                    accept="video/*"
+                                    kind="video"
+                                    value={formData.videoUrl}
+                                    onChange={(url) =>
+                                        setFormData((previous) => ({
+                                            ...previous,
+                                            videoUrl: url,
+                                        }))
+                                    }
+                                />
 
-                                <Field>
-                                    <FieldLabel htmlFor="thumbnailUpload">Thumbnail Upload</FieldLabel>
-                                    <label
-                                        htmlFor="thumbnailUpload"
-                                        className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center transition-colors hover:border-slate-400 hover:bg-slate-100"
-                                    >
-                                        <ImagePlus className="size-8 text-slate-500" />
-                                        <p className="mt-3 text-sm font-semibold text-slate-700">
-                                            Upload Thumbnail
-                                        </p>
-                                        <FieldDescription className="!mt-1 text-xs text-center">
-                                            Add a clean cover image for the post
-                                        </FieldDescription>
-                                        <input
-                                            id="thumbnailUpload"
-                                            type="file"
-                                            accept="image/*"
-                                            className="sr-only"
-                                        />
-                                    </label>
-                                </Field>
+                                <FileUploadField
+                                    label="Thumbnail Upload"
+                                    folder="posts/thumbnails"
+                                    accept="image/*"
+                                    kind="image"
+                                    previewType="thumbnail"
+                                    value={formData.thumbnailUrl}
+                                    onChange={(url) =>
+                                        setFormData((previous) => ({
+                                            ...previous,
+                                            thumbnailUrl: url,
+                                        }))
+                                    }
+                                />
                             </div>
+                            <FieldDescription className="text-xs">
+                                Upload your highlight video and a clean thumbnail before posting.
+                            </FieldDescription>
                         </FieldGroup>
 
                         <FieldSeparator className="my-5">Preview Summary</FieldSeparator>
@@ -212,34 +322,27 @@ export default function PostComposer() {
                             <div className="mt-4 grid gap-3 text-sm text-slate-600 md:grid-cols-2">
                                 <div className="rounded-xl bg-white px-3 py-3">
                                     <span className="font-medium text-slate-900">Position:</span>{" "}
-                                    Striker
+                                    {formData.position}
                                 </div>
                                 <div className="rounded-xl bg-white px-3 py-3">
                                     <span className="font-medium text-slate-900">Match Type:</span>{" "}
-                                    Match
+                                    {formData.matchType}
                                 </div>
                                 <div className="rounded-xl bg-white px-3 py-3">
                                     <span className="font-medium text-slate-900">Strong Foot:</span>{" "}
-                                    Right
+                                    {formData.strongFoot}
                                 </div>
                                 <div className="rounded-xl bg-white px-3 py-3">
                                     <span className="font-medium text-slate-900">Tags:</span>{" "}
-                                    #finishing #matchday
+                                    {previewTags}
                                 </div>
                             </div>
                         </section>
 
                         <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-                            <Button type="submit" className="w-full py-5">
-                                Create Post
+                            <Button type="submit" className="w-full py-5" disabled={isPending}>
+                                {isPending ? <Spinner className="size-4" /> : "Create Post"}
                             </Button>
-                            {/* <Button
-                                type="button"
-                                variant="outline"
-                                className="h-10 flex-1 rounded-xl"
-                            >
-                                Save Draft
-                            </Button> */}
                         </div>
                     </form>
                 </section>

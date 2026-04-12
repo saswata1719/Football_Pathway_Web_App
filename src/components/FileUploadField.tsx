@@ -12,6 +12,7 @@ type FileUploadFieldProps = {
     folder: string
     accept: string
     kind?: "image" | "video"
+    previewType?: "avatar" | "thumbnail"
     value?: string | null
     onChange: (url: string) => void
 }
@@ -21,6 +22,7 @@ export default function FileUploadField({
     folder,
     accept,
     kind = "image",
+    previewType = "avatar",
     value,
     onChange,
 }: FileUploadFieldProps) {
@@ -93,7 +95,11 @@ export default function FileUploadField({
             {kind === "image" ? (
                 <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
                     <div
-                        className="h-20 w-20 rounded-full bg-cover bg-center bg-no-repeat"
+                        className={
+                            previewType === "thumbnail"
+                                ? "h-20 w-28 rounded-xl bg-cover bg-center bg-no-repeat"
+                                : "h-20 w-20 rounded-full bg-cover bg-center bg-no-repeat"
+                        }
                         style={{
                             backgroundImage: `url('${value || "/user_placeholder.jpg"}')`,
                         }}

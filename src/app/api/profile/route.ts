@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
 
-import { auth } from "@/lib/auth"
-import { AUTH_COOKIE_NAME, verifyAuthToken } from "@/lib/auth-session"
 import { DBconnection } from "@/lib/DbConnection"
+import { getCurrentUser } from "@/lib/current-user"
 import { ensureUserProfile } from "@/lib/profile"
 import { ProfileModel } from "@/models/ProfileModel"
 import { USerModel } from "@/models/UserModel"
@@ -24,46 +22,9 @@ type UpdateProfileBody = {
     topSkill?: string | null
 }
 
-async function getAuthenticatedUser() {
-    const cookieStore = await cookies()
-    const authToken = cookieStore.get(AUTH_COOKIE_NAME)?.value
-    const customSession = authToken ? await verifyAuthToken(authToken) : null
-    const betterAuthSession = await auth.api.getSession({
-        headers: new Headers({
-            cookie: cookieStore.toString(),
-        }),
-    })
-    const userId = customSession?.userId || betterAuthSession?.user?.id
-
-    if (!customSession?.userId && !betterAuthSession?.user?.id) {
-        return null
-    }
-
-    await DBconnection()
-
-    let user = userId ? await USerModel.findById(userId) : null
-
-    if (!user && betterAuthSession?.user?.email) {
-        user = await USerModel.findOne({
-            email: betterAuthSession.user.email.toLowerCase(),
-        })
-    }
-
-    if (!user && betterAuthSession?.user?.email) {
-        user = await USerModel.create({
-            name: betterAuthSession.user.name || "Player",
-            email: betterAuthSession.user.email.toLowerCase(),
-            image: betterAuthSession.user.image || null,
-            provider: "google",
-        })
-    }
-
-    return user
-}
-
 export async function GET() {
     try {
-        const user = await getAuthenticatedUser()
+        const user = await getCurrentUser()
 
         if (!user) {
             return NextResponse.json(
@@ -99,7 +60,7 @@ export async function GET() {
 
 export async function PUT(request: Request) {
     try {
-        const user = await getAuthenticatedUser()
+        const user = await getCurrentUser()
 
         if (!user) {
             return NextResponse.json(

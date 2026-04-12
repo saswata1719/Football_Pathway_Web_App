@@ -1,9 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { SendHorizontal, X } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Spinner } from "@/components/ui/spinner"
 
 type CommentItem = {
     id: string
@@ -18,9 +21,42 @@ interface CommentsDrawerProps {
     isOpen: boolean
     onClose: () => void
     zIndexClass?: string
+    onSubmit?: (text: string) => Promise<void> | void
+    isSubmitting?: boolean
 }
 
 export type { CommentItem }
+
+function formatCommentTime(value: string) {
+    const parsedDate = new Date(value)
+
+    if (Number.isNaN(parsedDate.getTime())) {
+        return value
+    }
+
+    const diffMs = Date.now() - parsedDate.getTime()
+    const diffMinutes = Math.floor(diffMs / (1000 * 60))
+    const diffHours = Math.floor(diffMinutes / 60)
+    const diffDays = Math.floor(diffHours / 24)
+
+    if (diffMinutes < 1) {
+        return "Just now"
+    }
+
+    if (diffMinutes < 60) {
+        return `${diffMinutes}m ago`
+    }
+
+    if (diffHours < 24) {
+        return `${diffHours}h ago`
+    }
+
+    if (diffDays < 7) {
+        return `${diffDays}d ago`
+    }
+
+    return parsedDate.toLocaleDateString()
+}
 
 export default function CommentsDrawer({
     comments,
@@ -28,9 +64,27 @@ export default function CommentsDrawer({
     isOpen,
     onClose,
     zIndexClass = "z-[60]",
+    onSubmit,
+    isSubmitting = false,
 }: CommentsDrawerProps) {
+    const [commentText, setCommentText] = useState("")
+
     if (!isOpen) {
         return null
+    }
+
+    const handleSubmit = async () => {
+        const text = commentText.trim()
+
+        if (!text) {
+            toast.error("Please write a comment first")
+            return
+        }
+
+        try {
+            await onSubmit?.(text)
+            setCommentText("")
+        } catch {}
     }
 
     return (
@@ -95,7 +149,7 @@ export default function CommentsDrawer({
                                                 {comment.name}
                                             </h3>
                                             <span className="text-xs text-slate-400">
-                                                {comment.time}
+                                                {formatCommentTime(comment.time)}
                                             </span>
                                         </div>
                                         <p className="mt-1 text-sm leading-6 text-slate-600">
@@ -112,10 +166,21 @@ export default function CommentsDrawer({
                             type="text"
                             placeholder="Write a comment..."
                             className="h-11 rounded-xl border-slate-200 bg-slate-50"
+                            value={commentText}
+                            onChange={(event) => setCommentText(event.target.value)}
                         />
-                        <Button type="button" className="h-11 rounded-xl px-4">
-                            <SendHorizontal className="size-4" />
-                            Post
+                        <Button
+                            type="button"
+                            className="h-11 rounded-xl px-4"
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? (
+                                <Spinner className="size-4" />
+                            ) : (
+                                <SendHorizontal className="size-4" />
+                            )}
+                            {isSubmitting ? "Posting" : "Post"}
                         </Button>
                     </div>
                 </div>
