@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Heart, MapPin, MessageCircle, Play, Share2, Sparkles } from "lucide-react"
+import { Heart, MapPin, MessageCircle, Pause, Play, Share2, Sparkles } from "lucide-react"
 import { RiVerifiedBadgeFill } from "react-icons/ri"
 import { toast } from "sonner"
 
@@ -358,6 +358,19 @@ export default function HomeReelFeed() {
                                               ? "Practice Clip"
                                               : "Trial Reel"}
                                     </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => void togglePlayback(item.id)}
+                                        className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white backdrop-blur-md transition-colors hover:bg-black/45"
+                                        aria-label={isPlaying ? "Pause video" : "Play video"}
+                                    >
+                                        {isPlaying ? (
+                                            <Pause className="size-4 fill-current" />
+                                        ) : (
+                                            <Play className="ml-0.5 size-4 fill-current" />
+                                        )}
+                                    </button>
 
                                     {!isPlaying && (
                                         <button

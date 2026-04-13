@@ -49,6 +49,21 @@ const initialFormState: ProfileFormState = {
     topSkill: null,
 }
 
+function getProfileImageUrl(image: string | null | undefined, updatedAt?: string | Date) {
+    if (!image) {
+        return "/user_placeholder.jpg"
+    }
+
+    if (!updatedAt) {
+        return image
+    }
+
+    const version = new Date(updatedAt).getTime()
+    const separator = image.includes("?") ? "&" : "?"
+
+    return `${image}${separator}v=${version}`
+}
+
 export default function EditProfileView() {
     const router = useRouter()
     const queryClient = useQueryClient()
@@ -78,6 +93,10 @@ export default function EditProfileView() {
     }, [profile])
 
     const formData = draftProfile ?? profileFormData
+    const profileImage =
+        draftProfile?.image && draftProfile.image !== profile?.image
+            ? draftProfile.image
+            : getProfileImageUrl(formData.image, profile?.updatedAt)
 
     const { mutate, isPending } = useMutation({
         mutationFn: async (payload: UpdateProfilePayload) => {
@@ -168,7 +187,7 @@ export default function EditProfileView() {
                             aria-hidden="true"
                             className="h-24 w-24 rounded-full border-4 border-white bg-cover bg-center shadow-[0_12px_30px_rgba(15,23,42,0.12)]"
                             style={{
-                                backgroundImage: `url('${formData.image || "/user_placeholder.jpg"}')`,
+                                backgroundImage: `url('${profileImage}')`,
                             }}
                         />
                         <div className="flex-1">

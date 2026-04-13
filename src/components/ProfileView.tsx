@@ -2,19 +2,41 @@
 
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Heart, MapPin, Settings } from "lucide-react"
+import { Eye, MapPin, Settings } from "lucide-react"
+import axios from "axios"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { RiVerifiedBadgeFill } from "react-icons/ri"
+import { toast } from "sonner"
 
 import VideoPreviewDialog, { type VideoPreviewItem } from "@/components/VideoPreviewDialog"
+import { Spinner } from "@/components/ui/spinner"
+import { authClient } from "@/lib/auth-client"
 import { getPosts } from "@/lib/api/post"
 import { getProfile } from "@/lib/api/profile"
 
 type PostItem = Awaited<ReturnType<typeof getPosts>>[number]
 
+function getProfileImageUrl(image: string | null | undefined, updatedAt?: string | Date) {
+    if (!image) {
+        return "/user_placeholder.jpg"
+    }
+
+    if (!updatedAt) {
+        return image
+    }
+
+    const version = new Date(updatedAt).getTime()
+    const separator = image.includes("?") ? "&" : "?"
+
+    return `${image}${separator}v=${version}`
+}
+
 export default function ProfileView() {
+    const router = useRouter()
     const [selectedVideo, setSelectedVideo] = useState<VideoPreviewItem | null>(null)
     const [isDialogVisible, setIsDialogVisible] = useState(false)
+    const [isLoggingOut, setIsLoggingOut] = useState(false)
     const { data: profile, isLoading: isProfileLoading, isError: isProfileError } = useQuery({
         queryKey: ["profile"],
         queryFn: () => getProfile(),
@@ -66,7 +88,34 @@ export default function ProfileView() {
         window.setTimeout(() => setSelectedVideo(null), 220)
     }
 
-    const profileImage = profile?.image || "/user_placeholder.jpg"
+    const handleLogout = async () => {
+        if (isLoggingOut) {
+            return
+        }
+
+        setIsLoggingOut(true)
+
+        try {
+            try {
+                await authClient.signOut()
+            } catch {}
+
+            await axios.post("/api/logout")
+            toast.success("Logged out successfully")
+            router.replace("/login")
+            router.refresh()
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                toast.error(error.response?.data?.message || "Unable to log out right now.")
+            } else {
+                toast.error("Unable to log out right now.")
+            }
+        } finally {
+            setIsLoggingOut(false)
+        }
+    }
+
+    const profileImage = getProfileImageUrl(profile?.image, profile?.updatedAt)
     const profileName = profile?.fullName || "Player name"
     const profileLocation = profile?.location || "Location not added"
     const profileBio = profile?.bio?.trim() || "No bio added yet."
@@ -168,6 +217,22 @@ export default function ProfileView() {
                                 {profileBio}
                             </p>
 
+                            <button
+                                type="button"
+                                onClick={handleLogout}
+                                disabled={isLoggingOut}
+                                className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 text-sm font-medium text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                                {isLoggingOut ? (
+                                    <>
+                                        <Spinner className="size-4 text-red-600" />
+                                        Logging out...
+                                    </>
+                                ) : (
+                                    "Log out"
+                                )}
+                            </button>
+
                             <div className="mt-5 grid grid-cols-3 gap-2 md:gap-3">
                                 {profileStatsData.map((stat) => (
                                     <div
@@ -220,7 +285,7 @@ export default function ProfileView() {
                                             </div>
                                             <div className="absolute inset-x-2 bottom-2">
                                                 <div className="flex items-center gap-1 text-white">
-                                                    <Heart className="size-3.5 fill-current" />
+                                                    <Eye className="size-3.5 " />
                                                     <span className="text-[11px] font-semibold">
                                                         {post.stats?.views ?? 0}
                                                     </span>
