@@ -2,6 +2,7 @@ import axios from "axios"
 
 export type FeedItem = {
     id: string
+    playerUserId: string
     title: string
     caption: string
     videoUrl: string

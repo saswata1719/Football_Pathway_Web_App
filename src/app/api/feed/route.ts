@@ -70,6 +70,7 @@ export async function GET() {
 
             return {
                 id: String(post._id),
+                playerUserId: userId,
                 title: post.caption,
                 caption: post.caption,
                 videoUrl: post.videoUrl,

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Heart, MapPin, MessageCircle, Pause, Play, Share2, Sparkles } from "lucide-react"
+import Link from "next/link"
 import { RiVerifiedBadgeFill } from "react-icons/ri"
 import { toast } from "sonner"
 
@@ -384,7 +385,10 @@ export default function HomeReelFeed() {
                                     )}
 
                                     <div className="absolute bottom-5 left-5 right-20">
-                                        <div className="flex items-center gap-2">
+                                        <Link
+                                            href={`/players/${item.playerUserId}`}
+                                            className="flex items-center gap-2"
+                                        >
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
                                                 src={item.playerImage || "/user_placeholder.jpg"}
@@ -413,7 +417,7 @@ export default function HomeReelFeed() {
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </Link>
 
                                         <p className="mt-2 max-w-xs line-clamp-2 text-xs text-white/88 sm:max-w-sm">
                                             {item.caption}
