@@ -87,7 +87,7 @@ export function LoginForm({
                     Show Your Game. Get Discovered.
                 </h1>
                 <p className="max-w-xs text-sm text-white/70">
-                    Sign in to share clips, grow your profile, and stay visible to scouts.
+                    Sign in to share clips, grow your profile and stay visible.
                 </p>
             </div>
 
@@ -155,7 +155,7 @@ export function LoginForm({
                 {isGoogleLoading ? "Please wait..." : "Continue with Google"}
             </Button>
 
-            <p className="pt-2 text-center text-sm text-white/50">For Players & Scouts</p>
+            <p className="pt-2 text-center text-sm text-white/50">Football Pathway</p>
         </form>
     )
 }
