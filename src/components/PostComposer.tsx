@@ -54,6 +54,8 @@ const initialFormState: PostFormState = {
 export default function PostComposer() {
     const queryClient = useQueryClient()
     const [formData, setFormData] = useState<PostFormState>(initialFormState)
+    const [isVideoUploading, setIsVideoUploading] = useState(false)
+    const [isThumbnailUploading, setIsThumbnailUploading] = useState(false)
 
     const { mutate, isPending } = useMutation({
         mutationFn: async (payload: CreatePostPayload) => {
@@ -112,6 +114,11 @@ export default function PostComposer() {
     }
 
     const previewTags = formData.tags.trim() || "No tags added"
+    const isWaitingForUploads =
+        isVideoUploading ||
+        isThumbnailUploading ||
+        !formData.videoUrl ||
+        !formData.thumbnailUrl
 
     return (
         <main className="min-h-svh bg-white px-4 pb-28 pt-14">
@@ -284,6 +291,7 @@ export default function PostComposer() {
                                     accept="video/*"
                                     kind="video"
                                     value={formData.videoUrl}
+                                    onUploadingChange={setIsVideoUploading}
                                     onChange={(url) =>
                                         setFormData((previous) => ({
                                             ...previous,
@@ -299,6 +307,7 @@ export default function PostComposer() {
                                     kind="image"
                                     previewType="thumbnail"
                                     value={formData.thumbnailUrl}
+                                    onUploadingChange={setIsThumbnailUploading}
                                     onChange={(url) =>
                                         setFormData((previous) => ({
                                             ...previous,
@@ -340,8 +349,18 @@ export default function PostComposer() {
                         </section>
 
                         <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-                            <Button type="submit" className="w-full py-5" disabled={isPending}>
-                                {isPending ? <Spinner className="size-4" /> : "Create Post"}
+                            <Button
+                                type="submit"
+                                className="w-full py-5"
+                                disabled={isPending || isWaitingForUploads}
+                            >
+                                {isPending ? (
+                                    <Spinner className="size-4" />
+                                ) : isVideoUploading || isThumbnailUploading ? (
+                                    "Preparing media..."
+                                ) : (
+                                    "Create Post"
+                                )}
                             </Button>
                         </div>
                     </form>

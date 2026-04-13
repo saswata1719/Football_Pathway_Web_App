@@ -15,6 +15,7 @@ type FileUploadFieldProps = {
     previewType?: "avatar" | "thumbnail"
     value?: string | null
     onChange: (url: string) => void
+    onUploadingChange?: (isUploading: boolean) => void
 }
 
 export default function FileUploadField({
@@ -25,6 +26,7 @@ export default function FileUploadField({
     previewType = "avatar",
     value,
     onChange,
+    onUploadingChange,
 }: FileUploadFieldProps) {
     const inputId = useId()
     const [isUploading, setIsUploading] = useState(false)
@@ -39,6 +41,7 @@ export default function FileUploadField({
 
         setErrorMessage("")
         setIsUploading(true)
+        onUploadingChange?.(true)
 
         try {
             const uploadedFile = await uploadFile(file, { folder })
@@ -49,6 +52,7 @@ export default function FileUploadField({
             )
         } finally {
             setIsUploading(false)
+            onUploadingChange?.(false)
             event.target.value = ""
         }
     }
