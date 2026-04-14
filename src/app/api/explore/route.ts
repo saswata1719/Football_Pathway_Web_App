@@ -8,6 +8,7 @@ import { ProfileModel } from "@/models/ProfileModel"
 
 type ExploreResponseItem = {
     id: string
+    userId: string
     playerName: string
     playerImage: string
     position: string
@@ -106,6 +107,7 @@ export async function GET(request: Request) {
                     : null
             const item = {
                 id: String(post._id),
+                userId,
                 playerName: profile?.fullName || userName,
                 playerImage: profile?.image || userImage || "/user_placeholder.jpg",
                 position: profile?.position || post.position,
@@ -172,11 +174,41 @@ export async function GET(request: Request) {
             .sort((first, second) => second.stats.views - first.stats.views)
             .slice(0, 6)
 
+        const profileMap = new Map<
+            string,
+            {
+                userId: string
+                playerName: string
+                playerImage: string
+                position: string
+                age: number
+                club: string | null
+                location: string
+                isVerified: boolean
+            }
+        >()
+
+        filteredItems.forEach((item) => {
+            if (!profileMap.has(item.userId)) {
+                profileMap.set(item.userId, {
+                    userId: item.userId,
+                    playerName: item.playerName,
+                    playerImage: item.playerImage,
+                    position: item.position,
+                    age: item.age,
+                    club: item.club,
+                    location: item.location,
+                    isVerified: item.isVerified,
+                })
+            }
+        })
+
         return NextResponse.json(
             {
                 success: true,
                 message: "Explore data fetched successfully.",
                 explore: {
+                    profiles: Array.from(profileMap.values()).slice(0, 8),
                     risingTalent,
                     trending,
                 },

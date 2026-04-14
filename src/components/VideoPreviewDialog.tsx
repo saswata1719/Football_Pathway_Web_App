@@ -69,6 +69,7 @@ export default function VideoPreviewDialog({
     const [isCommentsOpen, setIsCommentsOpen] = useState(false)
     const [isShareVisible, setIsShareVisible] = useState(false)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+    const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null)
     const [likesCount, setLikesCount] = useState(activeItem?.likes ?? "0")
     const [commentsCount, setCommentsCount] = useState(activeItem?.commentsCount ?? "0")
     const [sharesCount, setSharesCount] = useState(activeItem?.shares ?? "0")
@@ -128,6 +129,15 @@ export default function VideoPreviewDialog({
             })
             .catch(() => {})
     }, [activeItem?.postId, isOpen, queryClient])
+
+    useEffect(() => {
+        if (!videoElement) {
+            return
+        }
+
+        videoElement.muted = false
+        videoElement.volume = 1
+    }, [videoElement, activeItem?.videoUrl])
 
     const likeMutation = useMutation({
         mutationFn: async () => {
@@ -344,10 +354,10 @@ export default function VideoPreviewDialog({
 
                                 <div className="relative aspect-[9/16] w-full bg-black">
                                     <video
+                                        ref={setVideoElement}
                                         className="h-full w-full object-contain bg-black"
                                         autoPlay
                                         loop
-                                        muted
                                         playsInline
                                         poster={activeItem.poster}
                                         preload="metadata"

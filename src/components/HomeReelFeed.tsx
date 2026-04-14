@@ -164,6 +164,8 @@ export default function HomeReelFeed() {
         pauseAllVideos(id)
 
         try {
+            currentVideo.muted = false
+            currentVideo.volume = 1
             await currentVideo.play()
             setPlayingId(id)
         } catch {
@@ -333,7 +335,6 @@ export default function HomeReelFeed() {
                                         disablePictureInPicture
                                         autoPlay
                                         loop
-                                        muted
                                         playsInline
                                         poster={item.thumbnailUrl}
                                         preload="auto"

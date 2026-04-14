@@ -2,6 +2,7 @@ import axios from "axios"
 
 export type ExploreItem = {
     id: string
+    userId: string
     playerName: string
     playerImage: string
     position: string
@@ -23,6 +24,17 @@ export type ExploreItem = {
     score: number
 }
 
+export type ExploreProfileItem = {
+    userId: string
+    playerName: string
+    playerImage: string
+    position: string
+    age: number
+    club: string | null
+    location: string
+    isVerified: boolean
+}
+
 export type ExploreFilters = {
     search: string
     position: string
@@ -41,6 +53,7 @@ export async function getExplore(filters: ExploreFilters) {
     }
 
     return res.data.explore as {
+        profiles: ExploreProfileItem[]
         risingTalent: ExploreItem[]
         trending: ExploreItem[]
     }

@@ -14,6 +14,7 @@ import {
     Users,
 } from "lucide-react"
 import Link from "next/link"
+import { RiVerifiedBadgeFill } from "react-icons/ri"
 
 import { Input } from "@/components/ui/input"
 import {
@@ -26,7 +27,12 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import VideoPreviewDialog, { type VideoPreviewItem } from "@/components/VideoPreviewDialog"
-import { getExplore, type ExploreFilters, type ExploreItem } from "@/lib/api/explore"
+import {
+    getExplore,
+    type ExploreFilters,
+    type ExploreItem,
+    type ExploreProfileItem,
+} from "@/lib/api/explore"
 
 function formatCount(value: number) {
     if (value >= 1000000) {
@@ -91,6 +97,18 @@ export default function ExploreView() {
 
     const risingTalent = data?.risingTalent ?? []
     const trending = data?.trending ?? []
+    const profiles = data?.profiles ?? []
+    const hasSearchQuery = filters.search.trim().length > 0
+
+    const formatProfileSubtitle = (item: ExploreProfileItem) => {
+        const parts = [`${formatPosition(item.position)} • ${item.age}`]
+
+        if (item.club) {
+            parts.push(item.club)
+        }
+
+        return parts.join(" • ")
+    }
 
     return (
         <>
@@ -235,6 +253,78 @@ export default function ExploreView() {
                             </Select>
                         </div>
                     </section>
+
+                    {hasSearchQuery && (
+                        <section className="space-y-4">
+                            <div>
+                                <h2 className="text-xl font-semibold tracking-tight text-slate-900 md:text-2xl">
+                                    Profiles
+                                </h2>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    Matching players for your search
+                                </p>
+                            </div>
+
+                            {isLoading ? (
+                                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
+                                    Searching profiles...
+                                </div>
+                            ) : isError ? (
+                                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-10 text-center text-sm text-red-600">
+                                    Unable to load search results right now.
+                                </div>
+                            ) : profiles.length > 0 ? (
+                                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                                    {profiles.map((profile, index) => (
+                                        <Link
+                                            key={profile.userId}
+                                            href={`/players/${profile.userId}`}
+                                            className={`flex items-center gap-3 px-4 py-3 transition-colors hover:bg-slate-50 ${
+                                                index !== profiles.length - 1
+                                                    ? "border-b border-slate-100"
+                                                    : ""
+                                            }`}
+                                        >
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={
+                                                    profile.playerImage ||
+                                                    "/user_placeholder.jpg"
+                                                }
+                                                alt={profile.playerName}
+                                                className="h-12 w-12 rounded-full object-cover"
+                                                onError={(event) => {
+                                                    event.currentTarget.src =
+                                                        "/user_placeholder.jpg"
+                                                }}
+                                            />
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-1.5">
+                                                    <p className="truncate text-sm font-semibold text-slate-900">
+                                                        {profile.playerName}
+                                                    </p>
+                                                    {profile.isVerified && (
+                                                        <RiVerifiedBadgeFill className="size-3.5 text-sky-500" />
+                                                    )}
+                                                </div>
+                                                <p className="truncate text-xs text-slate-500">
+                                                    {formatProfileSubtitle(profile)}
+                                                </p>
+                                                <div className="mt-1 flex items-center gap-1 text-xs text-slate-400">
+                                                    <MapPin className="size-3" />
+                                                    {profile.location}
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
+                                    No matching profiles found.
+                                </div>
+                            )}
+                        </section>
+                    )}
 
                     <section className="space-y-4">
                         <div className="flex items-center justify-between gap-4">
