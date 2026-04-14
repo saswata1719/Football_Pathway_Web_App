@@ -1,61 +1,50 @@
-import axios from "axios"
+import { upload } from "@vercel/blob/client"
 
 type UploadFileOptions = {
     folder: string
+    kind?: "image" | "video"
 }
 
 export async function uploadFile(file: File, options: UploadFileOptions) {
-    const formData = new FormData()
-
-    formData.append("file", file)
-    formData.append("folder", options.folder)
+    const safeFolder = options.folder.replace(/[^a-zA-Z0-9/-]/g, "") || "uploads"
+    const safeFilename = file.name.replace(/\s+/g, "-")
+    const pathname = `${safeFolder}/${Date.now()}-${safeFilename}`
 
     try {
-        const res = await axios.post("/api/upload", formData, {
-            headers: {
-                "Content-Type": "multipart/form-data",
-            },
+        const uploadedFile = await upload(pathname, file, {
+            access: "public",
+            handleUploadUrl: "/api/upload",
+            clientPayload: JSON.stringify({
+                folder: safeFolder,
+                kind: options.kind ?? (file.type.startsWith("image/") ? "image" : "video"),
+            }),
+            multipart: file.size > 4_500_000 || file.type.startsWith("video/"),
         })
 
-        if (!res.data?.success) {
-            throw new Error(res.data?.message || "Failed to upload file")
+        return {
+            url: uploadedFile.url,
+            pathname: uploadedFile.pathname,
         }
-
-        return res.data.file as { url: string; pathname: string }
     } catch (error) {
-        if (axios.isAxiosError(error)) {
-            const statusCode = error.response?.status
-            const apiMessage = error.response?.data?.message
+        const message =
+            error instanceof Error ? error.message : "Unable to upload this file right now."
 
-            if (statusCode === 413) {
-                throw new Error(
-                    "This file is too large to upload with the current setup. Please use a smaller file or compress the video and try again."
-                )
-            }
-
-            if (statusCode === 400) {
-                throw new Error(apiMessage || "Please select a valid file and try again.")
-            }
-
-            if (statusCode === 401 || statusCode === 403) {
-                throw new Error("You do not have permission to upload this file right now.")
-            }
-
-            if (statusCode && statusCode >= 500) {
-                throw new Error(
-                    "The upload service is unavailable right now. Please try again in a moment."
-                )
-            }
-
-            if (error.code === "ERR_NETWORK") {
-                throw new Error(
-                    "The upload could not be completed due to a network issue. Please check your connection and try again."
-                )
-            }
-
-            throw new Error(apiMessage || "Unable to upload this file right now.")
+        if (message.includes("status code 413")) {
+            throw new Error(
+                "This file is too large to upload with the current setup. Please use a smaller file or compress the video and try again."
+            )
         }
 
-        throw new Error("Unable to upload this file right now.")
+        if (message.toLowerCase().includes("network")) {
+            throw new Error(
+                "The upload could not be completed due to a network issue. Please check your connection and try again."
+            )
+        }
+
+        if (message.toLowerCase().includes("invalid upload path")) {
+            throw new Error("This file could not be uploaded because the upload path is invalid.")
+        }
+
+        throw new Error(message || "Unable to upload this file right now.")
     }
 }

@@ -1,46 +1,43 @@
 import { NextResponse } from "next/server"
-import { put } from "@vercel/blob"
+import { handleUpload, type HandleUploadBody } from "@vercel/blob/client"
 
 export async function POST(request: Request) {
     try {
-        const formData = await request.formData()
-        const file = formData.get("file")
-        const folder = String(formData.get("folder") || "uploads").trim()
+        const body = (await request.json()) as HandleUploadBody
+        const jsonResponse = await handleUpload({
+            body,
+            request,
+            onBeforeGenerateToken: async (pathname, clientPayload) => {
+                const payload = clientPayload ? JSON.parse(clientPayload) : {}
+                const folder =
+                    typeof payload.folder === "string" && payload.folder.trim()
+                        ? payload.folder.trim()
+                        : "uploads"
+                const kind = payload.kind === "image" ? "image" : "video"
 
-        if (!(file instanceof File)) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "File is required.",
-                },
-                { status: 400 }
-            )
-        }
+                const safeFolder = folder.replace(/[^a-zA-Z0-9/-]/g, "") || "uploads"
 
-        const safeFolder = folder.replace(/[^a-zA-Z0-9/-]/g, "") || "uploads"
-        const pathname = `${safeFolder}/${Date.now()}-${file.name.replace(/\s+/g, "-")}`
+                if (!pathname.startsWith(`${safeFolder}/`)) {
+                    throw new Error("Invalid upload path.")
+                }
 
-        const uploadedFile = await put(pathname, file, {
-            access: "public",
-            addRandomSuffix: true,
+                return {
+                    addRandomSuffix: true,
+                    maximumSizeInBytes:
+                        kind === "image" ? 20 * 1024 * 1024 : 1024 * 1024 * 1024,
+                    allowedContentTypes:
+                        kind === "image" ? ["image/*"] : ["video/*"],
+                }
+            },
+            onUploadCompleted: async () => {},
         })
 
-        return NextResponse.json(
-            {
-                success: true,
-                message: "File uploaded successfully.",
-                file: {
-                    url: uploadedFile.url,
-                    pathname: uploadedFile.pathname,
-                },
-            },
-            { status: 200 }
-        )
+        return NextResponse.json(jsonResponse)
     } catch {
         return NextResponse.json(
             {
                 success: false,
-                message: "Something went wrong while uploading the file.",
+                message: "Something went wrong while preparing the upload.",
             },
             { status: 500 }
         )

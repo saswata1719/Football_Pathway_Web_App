@@ -44,7 +44,7 @@ export default function FileUploadField({
         onUploadingChange?.(true)
 
         try {
-            const uploadedFile = await uploadFile(file, { folder })
+            const uploadedFile = await uploadFile(file, { folder, kind })
             onChange(uploadedFile.url)
         } catch (error) {
             setErrorMessage(
