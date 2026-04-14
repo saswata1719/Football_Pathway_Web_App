@@ -20,14 +20,40 @@ export type PostCommentItem = {
     time: string
 }
 
-export async function createPost(payload: CreatePostPayload) {
-    const res = await axios.post("/api/post", payload)
+function getApiErrorMessage(
+    error: unknown,
+    fallbackMessage: string
+): string {
+    if (axios.isAxiosError(error)) {
+        const responseMessage =
+            typeof error.response?.data?.message === "string"
+                ? error.response.data.message
+                : null
 
-    if (!res.data?.success) {
-        throw new Error(res.data?.message || "Failed to create post")
+        if (responseMessage) {
+            return responseMessage
+        }
     }
 
-    return res.data.post
+    if (error instanceof Error && error.message) {
+        return error.message
+    }
+
+    return fallbackMessage
+}
+
+export async function createPost(payload: CreatePostPayload) {
+    try {
+        const res = await axios.post("/api/post", payload)
+
+        if (!res.data?.success) {
+            throw new Error(res.data?.message || "Failed to create post")
+        }
+
+        return res.data.post
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to create post"))
+    }
 }
 
 export async function getPosts() {

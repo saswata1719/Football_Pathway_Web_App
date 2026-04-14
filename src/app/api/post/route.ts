@@ -59,6 +59,16 @@ export async function POST(request: Request) {
             )
         }
 
+        if (!Number.isFinite(body.age) || body.age < 0) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Please enter a valid age before creating the post.",
+                },
+                { status: 400 }
+            )
+        }
+
         const post = await PostModel.create({
             user: user._id,
             position: body.position,
@@ -80,13 +90,23 @@ export async function POST(request: Request) {
             },
             { status: 201 }
         )
-    } catch {
+    } catch (error) {
+        const isValidationError =
+            typeof error === "object" &&
+            error !== null &&
+            "name" in error &&
+            error.name === "ValidationError"
+        const message =
+            error instanceof Error && error.message
+                ? error.message
+                : "Something went wrong while creating the post."
+
         return NextResponse.json(
             {
                 success: false,
-                message: "Something went wrong while creating the post.",
+                message,
             },
-            { status: 500 }
+            { status: isValidationError ? 400 : 500 }
         )
     }
 }
