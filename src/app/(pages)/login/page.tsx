@@ -23,20 +23,20 @@ export default function LoginPage() {
             <div className="relative z-10 flex min-h-svh items-center justify-center p-4 sm:p-6">
                 <div className="w-full md:max-w-md md:rounded-3xl md:border md:border-white/10 md:bg-white/[0.04] md:p-5 md:shadow-[0_30px_80px_rgba(0,0,0,0.35)] md:backdrop-blur-xl sm:p-7">
                     <div className="mb-6 mt-8 md:mt-0 flex justify-center">
-                        <div className="flex items-center justify-center">
+                        <div className="flex items-center justify-center gap-2">
                             {["/img1.jpeg", "/img2.jpeg", "/img3.jpeg"].map((src, index) => (
                                 <div
                                     key={src}
-                                    className={`relative h-20 w-30 flex gap-1 items-center justify-center  ${
+                                    className={`relative h-15 flex gap-1 items-center justify-center  ${
                                         index === 0 ? "" : ""
                                     }`}
                                 >
                                     <Image
                                         src={src}
                                         alt={`Football Pathway logo ${index + 1}`}
-                                        className="w-25 rounded-xl h-25"
-                                        width={400}
-                                        height={400}
+                                        className="w-15 rounded-xl h-15"
+                                        width={200}
+                                        height={200}
                                     />
                                 </div>
                             ))}
