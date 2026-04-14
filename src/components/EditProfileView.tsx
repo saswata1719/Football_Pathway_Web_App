@@ -68,6 +68,7 @@ export default function EditProfileView() {
     const router = useRouter()
     const queryClient = useQueryClient()
     const [draftProfile, setDraftProfile] = useState<ProfileFormState | null>(null)
+    const [isImageUploading, setIsImageUploading] = useState(false)
 
     const { data: profile, isLoading } = useQuery({
         queryKey: ["profile"],
@@ -211,6 +212,7 @@ export default function EditProfileView() {
                                 accept="image/*"
                                 kind="image"
                                 value={formData.image}
+                                onUploadingChange={setIsImageUploading}
                                 onChange={(url) =>
                                     setDraftProfile((previous) => {
                                         const base = previous ?? profileFormData
@@ -431,8 +433,14 @@ export default function EditProfileView() {
                         </FieldGroup>
 
                         <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-                            <Button type="submit" disabled={isPending}>
-                                {isPending ? <Spinner className="size-4" /> : "Save Changes"}
+                            <Button type="submit" disabled={isPending || isImageUploading}>
+                                {isPending ? (
+                                    <Spinner className="size-4" />
+                                ) : isImageUploading ? (
+                                    "Uploading image..."
+                                ) : (
+                                    "Save Changes"
+                                )}
                             </Button>
                             <Button asChild type="button" variant="outline">
                                 <Link href="/profile">Cancel</Link>
