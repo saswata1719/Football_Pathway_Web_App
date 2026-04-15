@@ -39,6 +39,8 @@ type PostFormState = {
     thumbnailUrl: string
 }
 
+type PostFormErrors = Partial<Record<keyof PostFormState, string>>
+
 const initialFormState: PostFormState = {
     position: "striker",
     age: "",
@@ -54,6 +56,7 @@ const initialFormState: PostFormState = {
 export default function PostComposer() {
     const queryClient = useQueryClient()
     const [formData, setFormData] = useState<PostFormState>(initialFormState)
+    const [errors, setErrors] = useState<PostFormErrors>({})
     const [isVideoUploading, setIsVideoUploading] = useState(false)
     const [isThumbnailUploading, setIsThumbnailUploading] = useState(false)
 
@@ -64,6 +67,7 @@ export default function PostComposer() {
         onSuccess: async () => {
             toast.success("Post created successfully")
             setFormData(initialFormState)
+            setErrors({})
             await queryClient.invalidateQueries({ queryKey: ["posts"] })
         },
         onError: (error: Error) => {
@@ -80,22 +84,63 @@ export default function PostComposer() {
             ...previous,
             [id]: value,
         }))
+
+        setErrors((previous) => ({
+            ...previous,
+            [id]: undefined,
+        }))
+    }
+
+    const validateForm = () => {
+        const nextErrors: PostFormErrors = {}
+
+        if (!formData.age.trim()) {
+            nextErrors.age = "Age is required."
+        }
+
+        if (!formData.location.trim()) {
+            nextErrors.location = "Location is required."
+        }
+
+        if (!formData.caption.trim()) {
+            nextErrors.caption = "Caption is required."
+        }
+
+        if (!formData.videoUrl.trim()) {
+            nextErrors.videoUrl = "Please upload a video before creating the post."
+        }
+
+        if (!formData.thumbnailUrl.trim()) {
+            nextErrors.thumbnailUrl =
+                "Please upload a thumbnail before creating the post."
+        }
+
+        const age = Number(formData.age)
+
+        if (formData.age.trim() && (!Number.isFinite(age) || age < 0)) {
+            nextErrors.age = "Please enter a valid age."
+        }
+
+        setErrors(nextErrors)
+
+        const firstError = Object.values(nextErrors)[0]
+
+        if (firstError) {
+            toast.error(firstError)
+            return false
+        }
+
+        return true
     }
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
 
-        if (!formData.videoUrl || !formData.thumbnailUrl) {
-            toast.error("Please upload video and thumbnail first")
+        if (!validateForm()) {
             return
         }
 
         const age = Number(formData.age)
-
-        if (!Number.isFinite(age) || age < 0) {
-            toast.error("Please enter a valid age")
-            return
-        }
 
         mutate({
             position: formData.position,
@@ -180,7 +225,13 @@ export default function PostComposer() {
                                         placeholder="27"
                                         value={formData.age}
                                         onChange={handleInputChange}
+                                        className={errors.age ? "border-red-400 focus-visible:ring-red-100" : ""}
                                     />
+                                    {errors.age ? (
+                                        <FieldDescription className="text-xs text-red-500">
+                                            {errors.age}
+                                        </FieldDescription>
+                                    ) : null}
                                 </Field>
                             </div>
 
@@ -195,9 +246,14 @@ export default function PostComposer() {
                                             placeholder="Mumbai, India"
                                             value={formData.location}
                                             onChange={handleInputChange}
-                                            className="pl-9"
+                                            className={`pl-9 ${errors.location ? "border-red-400 focus-visible:ring-red-100" : ""}`}
                                         />
                                     </div>
+                                    {errors.location ? (
+                                        <FieldDescription className="text-xs text-red-500">
+                                            {errors.location}
+                                        </FieldDescription>
+                                    ) : null}
                                 </Field>
 
                                 <Field>
@@ -276,8 +332,17 @@ export default function PostComposer() {
                                     placeholder="Describe the moment, performance, or key action from this clip..."
                                     value={formData.caption}
                                     onChange={handleInputChange}
-                                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                                    className={`w-full rounded-lg border bg-white px-3 py-3 text-sm text-slate-700 outline-none transition-colors placeholder:text-slate-400 focus:ring-2 ${
+                                        errors.caption
+                                            ? "border-red-400 focus:border-red-400 focus:ring-red-100"
+                                            : "border-slate-200 focus:border-slate-400 focus:ring-slate-200"
+                                    }`}
                                 />
+                                {errors.caption ? (
+                                    <FieldDescription className="text-xs text-red-500">
+                                        {errors.caption}
+                                    </FieldDescription>
+                                ) : null}
                             </Field>
                         </FieldGroup>
 
@@ -285,36 +350,58 @@ export default function PostComposer() {
 
                         <FieldGroup>
                             <div className="grid gap-4 md:grid-cols-2">
-                                <FileUploadField
-                                    label="Video Upload"
-                                    folder="posts/videos"
-                                    accept="video/*"
-                                    kind="video"
-                                    value={formData.videoUrl}
-                                    onUploadingChange={setIsVideoUploading}
-                                    onChange={(url) =>
-                                        setFormData((previous) => ({
-                                            ...previous,
-                                            videoUrl: url,
-                                        }))
-                                    }
-                                />
+                                <div>
+                                    <FileUploadField
+                                        label="Video Upload"
+                                        folder="posts/videos"
+                                        accept="video/*"
+                                        kind="video"
+                                        value={formData.videoUrl}
+                                        onUploadingChange={setIsVideoUploading}
+                                        onChange={(url) => {
+                                            setFormData((previous) => ({
+                                                ...previous,
+                                                videoUrl: url,
+                                            }))
+                                            setErrors((previous) => ({
+                                                ...previous,
+                                                videoUrl: undefined,
+                                            }))
+                                        }}
+                                    />
+                                    {errors.videoUrl ? (
+                                        <FieldDescription className="mt-2 text-xs text-red-500">
+                                            {errors.videoUrl}
+                                        </FieldDescription>
+                                    ) : null}
+                                </div>
 
-                                <FileUploadField
-                                    label="Thumbnail Upload"
-                                    folder="posts/thumbnails"
-                                    accept="image/*"
-                                    kind="image"
-                                    previewType="thumbnail"
-                                    value={formData.thumbnailUrl}
-                                    onUploadingChange={setIsThumbnailUploading}
-                                    onChange={(url) =>
-                                        setFormData((previous) => ({
-                                            ...previous,
-                                            thumbnailUrl: url,
-                                        }))
-                                    }
-                                />
+                                <div>
+                                    <FileUploadField
+                                        label="Thumbnail Upload"
+                                        folder="posts/thumbnails"
+                                        accept="image/*"
+                                        kind="image"
+                                        previewType="thumbnail"
+                                        value={formData.thumbnailUrl}
+                                        onUploadingChange={setIsThumbnailUploading}
+                                        onChange={(url) => {
+                                            setFormData((previous) => ({
+                                                ...previous,
+                                                thumbnailUrl: url,
+                                            }))
+                                            setErrors((previous) => ({
+                                                ...previous,
+                                                thumbnailUrl: undefined,
+                                            }))
+                                        }}
+                                    />
+                                    {errors.thumbnailUrl ? (
+                                        <FieldDescription className="mt-2 text-xs text-red-500">
+                                            {errors.thumbnailUrl}
+                                        </FieldDescription>
+                                    ) : null}
+                                </div>
                             </div>
                             <FieldDescription className="text-xs">
                                 Upload your highlight video and a clean thumbnail before posting.
