@@ -40,14 +40,14 @@ export default function LoginPage() {
                     <div className="mb-8 flex justify-center">
                         <Link
                             href="/"
-                            className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/8 px-5 py-3 text-sm font-medium text-white/90"
+                            className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/8 px-6 py-3.5 text-sm font-medium text-white/90"
                         >
                             <Image
                                 src="/logo.png"
                                 alt="Football Pathway"
-                                width={180}
-                                height={48}
-                                className="h-9 w-auto object-contain"
+                                width={260}
+                                height={64}
+                                className="h-12 w-auto object-contain sm:h-14"
                             />
                         </Link>
                     </div>
