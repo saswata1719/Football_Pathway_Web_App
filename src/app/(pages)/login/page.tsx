@@ -1,6 +1,5 @@
 import Link from "next/link"
 import Image from "next/image"
-import { IoIosFootball } from "react-icons/io"
 
 import { LoginForm } from "@/components/LoginForm"
 
@@ -41,12 +40,15 @@ export default function LoginPage() {
                     <div className="mb-8 flex justify-center">
                         <Link
                             href="/"
-                            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm font-medium text-white/90"
+                            className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/8 px-5 py-3 text-sm font-medium text-white/90"
                         >
-                            <div className="flex size-7 items-center justify-center rounded-full bg-[#ffcb11] text-[#1f1f12]">
-                                <IoIosFootball className="size-4" />
-                            </div>
-                            Hola
+                            <Image
+                                src="/logo.png"
+                                alt="Football Pathway"
+                                width={180}
+                                height={48}
+                                className="h-9 w-auto object-contain"
+                            />
                         </Link>
                     </div>
 
