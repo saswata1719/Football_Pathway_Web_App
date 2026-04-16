@@ -7,7 +7,7 @@ import Link from "next/link"
 import { RiVerifiedBadgeFill } from "react-icons/ri"
 import { toast } from "sonner"
 
-import CommentsDrawer from "@/components/CommentsDrawer"
+import CommentsDrawer, { type CommentItem } from "@/components/CommentsDrawer"
 import { getFeed } from "@/lib/api/feed"
 import {
     addPostComment,
