@@ -160,10 +160,10 @@
   }
 
   .animate-login-float {
-    animation: login-float 7s ease-in-out infinite;
+    animation: login-float 5.6s ease-in-out infinite;
   }
 
   .animate-login-drift {
-    animation: login-drift 10s ease-in-out infinite;
+    animation: login-drift 8s ease-in-out infinite;
   }
 }
