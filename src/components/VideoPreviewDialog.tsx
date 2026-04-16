@@ -9,6 +9,7 @@ import CommentsDrawer, { type CommentItem } from "@/components/CommentsDrawer"
 import DeletePostDialog from "@/components/DeletePostDialog"
 import {
     addPostComment,
+    deletePostComment,
     deletePost,
     getPostById,
     getPostComments,
@@ -70,6 +71,7 @@ export default function VideoPreviewDialog({
     const [isShareVisible, setIsShareVisible] = useState(false)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null)
+    const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
     const [likesCount, setLikesCount] = useState(activeItem?.likes ?? "0")
     const [commentsCount, setCommentsCount] = useState(activeItem?.commentsCount ?? "0")
     const [sharesCount, setSharesCount] = useState(activeItem?.shares ?? "0")
@@ -84,6 +86,7 @@ export default function VideoPreviewDialog({
         setIsLiked(false)
         setIsShareVisible(false)
         setIsDeleteDialogOpen(false)
+        setDeletingCommentId(null)
     }, [activeItem])
 
     const { data: livePost } = useQuery({
@@ -196,6 +199,80 @@ export default function VideoPreviewDialog({
         },
         onError: (error: Error) => {
             toast.error(error.message || "Unable to share this post")
+        },
+    })
+
+    const deleteCommentMutation = useMutation({
+        mutationFn: async (commentId: string) => {
+            if (!activeItem?.postId) {
+                throw new Error("Post id is missing.")
+            }
+
+            console.log("[VideoPreviewDialog] delete comment mutation started", {
+                postId: activeItem.postId,
+                commentId,
+            })
+            return deletePostComment(activeItem.postId, commentId)
+        },
+        onMutate: async (commentId) => {
+            console.log("[VideoPreviewDialog] delete comment onMutate", {
+                postId: activeItem?.postId,
+                commentId,
+            })
+            setDeletingCommentId(commentId)
+
+            await queryClient.cancelQueries({
+                queryKey: ["post-comments", activeItem?.postId],
+            })
+
+            const previousComments =
+                queryClient.getQueryData<CommentItem[]>([
+                    "post-comments",
+                    activeItem?.postId,
+                ]) ?? []
+
+            queryClient.setQueryData<CommentItem[]>(
+                ["post-comments", activeItem?.postId],
+                previousComments.filter((comment) => comment.id !== commentId)
+            )
+
+            setCommentsCount((previous) =>
+                String(Math.max(0, Number(previous || "0") - 1))
+            )
+
+            return { previousComments }
+        },
+        onSuccess: async () => {
+            console.log("[VideoPreviewDialog] delete comment succeeded", {
+                postId: activeItem?.postId,
+            })
+            toast.success("Comment deleted")
+        },
+        onError: (error: Error, _commentId, context) => {
+            console.log("[VideoPreviewDialog] delete comment failed", {
+                postId: activeItem?.postId,
+                error,
+            })
+            if (context?.previousComments) {
+                queryClient.setQueryData(
+                    ["post-comments", activeItem?.postId],
+                    context.previousComments
+                )
+                setCommentsCount(String(context.previousComments.length))
+            }
+
+            toast.error(error.message || "Unable to delete comment")
+        },
+        onSettled: async () => {
+            console.log("[VideoPreviewDialog] delete comment settled", {
+                postId: activeItem?.postId,
+            })
+            setDeletingCommentId(null)
+            await queryClient.invalidateQueries({
+                queryKey: ["post-comments", activeItem?.postId],
+            })
+            await queryClient.invalidateQueries({ queryKey: ["post", activeItem?.postId] })
+            await queryClient.invalidateQueries({ queryKey: ["posts"] })
         },
     })
 
@@ -630,6 +707,14 @@ export default function VideoPreviewDialog({
                           }
                         : undefined
                 }
+                onDelete={
+                    activeItem.postId
+                        ? async (commentId) => {
+                              await deleteCommentMutation.mutateAsync(commentId)
+                          }
+                        : undefined
+                }
+                deletingCommentId={deletingCommentId}
                 isSubmitting={commentMutation.isPending || isCommentsLoading}
             />
             <DeletePostDialog

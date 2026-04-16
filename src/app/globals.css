@@ -138,4 +138,32 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  @keyframes login-float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  @keyframes login-drift {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(10px, -12px, 0) scale(1.04);
+    }
+  }
+
+  .animate-login-float {
+    animation: login-float 7s ease-in-out infinite;
+  }
+
+  .animate-login-drift {
+    animation: login-drift 10s ease-in-out infinite;
+  }
 }

@@ -11,6 +11,7 @@ import CommentsDrawer from "@/components/CommentsDrawer"
 import { getFeed } from "@/lib/api/feed"
 import {
     addPostComment,
+    deletePostComment,
     getPostComments,
     sharePost,
     togglePostLike,
@@ -57,6 +58,7 @@ export default function HomeReelFeed() {
     const [sharesOverrides, setSharesOverrides] = useState<Record<string, number>>({})
     const [pendingLikeId, setPendingLikeId] = useState<string | null>(null)
     const [pendingShareId, setPendingShareId] = useState<string | null>(null)
+    const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
     const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
     const articleRefs = useRef<Record<string, HTMLElement | null>>({})
     const feedRef = useRef<HTMLDivElement | null>(null)
@@ -137,6 +139,67 @@ export default function HomeReelFeed() {
         onError: (error: Error) => {
             setPendingShareId(null)
             toast.error(error.message || "Unable to share this reel")
+        },
+    })
+
+    const deleteCommentMutation = useMutation({
+        mutationFn: async ({
+            postId,
+            commentId,
+        }: {
+            postId: string
+            commentId: string
+        }) => {
+            return deletePostComment(postId, commentId)
+        },
+        onMutate: async ({ postId, commentId }) => {
+            setDeletingCommentId(commentId)
+
+            await queryClient.cancelQueries({
+                queryKey: ["post-comments", postId],
+            })
+
+            const previousComments =
+                queryClient.getQueryData<CommentItem[]>(["post-comments", postId]) ?? []
+
+            queryClient.setQueryData<CommentItem[]>(
+                ["post-comments", postId],
+                previousComments.filter((comment) => comment.id !== commentId)
+            )
+
+            setCommentsOverrides((previous) => ({
+                ...previous,
+                [postId]: Math.max(
+                    0,
+                    (previous[postId] ?? activePost?.stats.comments ?? 0) - 1
+                ),
+            }))
+
+            return { previousComments, postId }
+        },
+        onSuccess: () => {
+            toast.success("Comment deleted")
+        },
+        onError: (error: Error, variables, context) => {
+            if (context?.previousComments) {
+                queryClient.setQueryData(
+                    ["post-comments", variables.postId],
+                    context.previousComments
+                )
+                setCommentsOverrides((previous) => ({
+                    ...previous,
+                    [variables.postId]: context.previousComments.length,
+                }))
+            }
+
+            toast.error(error.message || "Unable to delete comment")
+        },
+        onSettled: async (_data, _error, variables) => {
+            setDeletingCommentId(null)
+            await queryClient.invalidateQueries({
+                queryKey: ["post-comments", variables.postId],
+            })
+            await queryClient.invalidateQueries({ queryKey: ["feed"] })
         },
     })
 
@@ -508,6 +571,17 @@ export default function HomeReelFeed() {
                           }
                         : undefined
                 }
+                onDelete={
+                    activeCommentsFor
+                        ? async (commentId) => {
+                              await deleteCommentMutation.mutateAsync({
+                                  postId: activeCommentsFor,
+                                  commentId,
+                              })
+                          }
+                        : undefined
+                }
+                deletingCommentId={deletingCommentId}
                 isSubmitting={commentMutation.isPending || isCommentsLoading}
             />
         </main>

@@ -18,6 +18,7 @@ export type PostCommentItem = {
     image?: string | null
     text: string
     time: string
+    canDelete?: boolean
 }
 
 function getApiErrorMessage(
@@ -94,6 +95,20 @@ export async function addPostComment(postId: string, text: string) {
     }
 
     return res.data.comment as PostCommentItem
+}
+
+export async function deletePostComment(postId: string, commentId: string) {
+    try {
+        const res = await axios.delete(`/api/post/${postId}/comments/${commentId}`)
+
+        if (!res.data?.success) {
+            throw new Error(res.data?.message || "Failed to delete comment")
+        }
+
+        return res.data
+    } catch (error) {
+        throw new Error(getApiErrorMessage(error, "Failed to delete comment"))
+    }
 }
 
 export async function togglePostLike(postId: string) {

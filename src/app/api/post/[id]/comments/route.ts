@@ -16,6 +16,7 @@ export async function GET(
 ) {
     try {
         const { id } = await params
+        const currentUser = await getCurrentUser()
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return NextResponse.json(
@@ -28,6 +29,21 @@ export async function GET(
         }
 
         await DBconnection()
+
+        const post = await PostModel.findById(id).select("user").lean()
+
+        if (!post) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Post not found.",
+                },
+                { status: 404 }
+            )
+        }
+
+        const isPostOwner =
+            currentUser && String(post.user) === String(currentUser._id)
 
         const comments = await CommentModel.find({ post: id })
             .populate("user", "name image")
@@ -54,6 +70,13 @@ export async function GET(
                             : null,
                     text: comment.text,
                     time: comment.createdAt,
+                    canDelete:
+                        Boolean(currentUser) &&
+                        (isPostOwner ||
+                            (typeof comment.user === "object" &&
+                                comment.user &&
+                                "_id" in comment.user &&
+                                String(comment.user._id) === String(currentUser?._id))),
                 })),
             },
             { status: 200 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { SendHorizontal, X } from "lucide-react"
+import { SendHorizontal, Trash2, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ type CommentItem = {
     name: string
     time: string
     text: string
+    canDelete?: boolean
 }
 
 interface CommentsDrawerProps {
@@ -23,6 +24,8 @@ interface CommentsDrawerProps {
     zIndexClass?: string
     onSubmit?: (text: string) => Promise<void> | void
     isSubmitting?: boolean
+    onDelete?: (commentId: string) => Promise<void> | void
+    deletingCommentId?: string | null
 }
 
 export type { CommentItem }
@@ -66,8 +69,11 @@ export default function CommentsDrawer({
     zIndexClass = "z-[60]",
     onSubmit,
     isSubmitting = false,
+    onDelete,
+    deletingCommentId = null,
 }: CommentsDrawerProps) {
     const [commentText, setCommentText] = useState("")
+    const [localDeletingCommentId, setLocalDeletingCommentId] = useState<string | null>(null)
 
     if (!isOpen) {
         return null
@@ -85,6 +91,33 @@ export default function CommentsDrawer({
             await onSubmit?.(text)
             setCommentText("")
         } catch {}
+    }
+
+    const activeDeletingCommentId = deletingCommentId || localDeletingCommentId
+
+    const handleDelete = async (commentId: string) => {
+        if (!onDelete) {
+            console.log("[CommentsDrawer] delete requested but no onDelete handler", {
+                commentId,
+            })
+            return
+        }
+
+        console.log("[CommentsDrawer] delete button clicked", { commentId })
+        setLocalDeletingCommentId(commentId)
+
+        try {
+            await onDelete(commentId)
+            console.log("[CommentsDrawer] delete handler resolved", { commentId })
+        } catch (error) {
+            console.log("[CommentsDrawer] delete handler failed", {
+                commentId,
+                error,
+            })
+            throw error
+        } finally {
+            setLocalDeletingCommentId(null)
+        }
     }
 
     return (
@@ -133,7 +166,7 @@ export default function CommentsDrawer({
                         {comments.map((comment) => (
                             <article
                                 key={comment.id}
-                                className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                                className="relative rounded-2xl border border-slate-200 bg-slate-50 p-4"
                             >
                                 <div className="flex items-start gap-3">
                                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
@@ -155,6 +188,27 @@ export default function CommentsDrawer({
                                         <p className="mt-1 text-sm leading-6 text-slate-600">
                                             {comment.text}
                                         </p>
+                                        {comment.canDelete ? (
+                                            <button
+                                                type="button"
+                                                onClick={(event) => {
+                                                    event.preventDefault()
+                                                    event.stopPropagation()
+                                                    void handleDelete(comment.id)
+                                                }}
+                                                disabled={activeDeletingCommentId === comment.id}
+                                                className="relative z-20 mt-2 inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-red-200 bg-white px-2.5 py-1.5 text-xs font-medium text-red-500 transition-colors hover:border-red-300 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                                            >
+                                                {activeDeletingCommentId === comment.id ? (
+                                                    <Spinner className="size-3.5" />
+                                                ) : (
+                                                    <Trash2 className="size-3.5" />
+                                                )}
+                                                {activeDeletingCommentId === comment.id
+                                                    ? "Deleting..."
+                                                    : "Delete comment"}
+                                            </button>
+                                        ) : null}
                                     </div>
                                 </div>
                             </article>
