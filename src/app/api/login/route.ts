@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 
 import { AUTH_COOKIE_NAME, createAuthToken } from "@/lib/auth-session"
 import { DBconnection } from "@/lib/DbConnection"
+import { appEnv } from "@/lib/env"
 import { ensureUserProfile } from "@/lib/profile"
 import { USerModel } from "@/models/UserModel"
 
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
         response.cookies.set(AUTH_COOKIE_NAME, token, {
             httpOnly: true,
             sameSite: "lax",
-            secure: process.env.NODE_ENV === "production",
+            secure: appEnv.isProduction,
             path: "/",
             maxAge: 60 * 60 * 24 * 7,
         })

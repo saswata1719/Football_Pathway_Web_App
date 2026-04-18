@@ -1,3 +1,5 @@
+import { env } from "@/lib/env"
+
 type SessionPayload = {
     userId: string
     email: string
@@ -8,7 +10,7 @@ const AUTH_COOKIE_NAME = "auth-token"
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000
 
 function getAuthSecret() {
-    return process.env.AUTH_SECRET || "change-this-auth-secret"
+    return env.AUTH_SECRET
 }
 
 function toBase64Url(input: string) {

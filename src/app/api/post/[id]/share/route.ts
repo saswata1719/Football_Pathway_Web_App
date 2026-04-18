@@ -2,19 +2,16 @@ import { NextResponse } from "next/server"
 import mongoose from "mongoose"
 
 import { DBconnection } from "@/lib/DbConnection"
+import { appEnv, env } from "@/lib/env"
 import { PostModel } from "@/models/PostModel"
 
 function getBaseUrl() {
-    if (process.env.NEXT_PUBLIC_BETTER_AUTH_URL) {
-        return process.env.NEXT_PUBLIC_BETTER_AUTH_URL
+    if (appEnv.authBaseUrl) {
+        return appEnv.authBaseUrl
     }
 
-    if (process.env.BETTER_AUTH_URL) {
-        return process.env.BETTER_AUTH_URL
-    }
-
-    if (process.env.VERCEL_URL) {
-        return `https://${process.env.VERCEL_URL}`
+    if (env.VERCEL_URL) {
+        return `https://${env.VERCEL_URL}`
     }
 
     return "http://localhost:3000"

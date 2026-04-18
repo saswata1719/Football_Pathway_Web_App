@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
 
+import { env } from "@/lib/env"
+
 export async function DBconnection() {
     try {
-        await mongoose.connect(process.env.MONGODB_URI!)
+        await mongoose.connect(env.MONGODB_URI)
 
         const connection = mongoose.connection;
 
