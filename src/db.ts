@@ -1,14 +1,17 @@
 import { MongoClient } from "mongodb"
-import { appEnv, env } from "@/lib/env"
 
-const uri = env.MONGODB_URI
+const uri = process.env.MONGODB_URI
+
+if (!uri) {
+    throw new Error("MONGODB_URI is not defined in environment variables.")
+}
 
 let globalMongoClient: MongoClient | undefined
 
 const client = globalMongoClient ?? new MongoClient(uri)
 const clientPromise = client.connect()
 
-if (!appEnv.isProduction) {
+if (process.env.NODE_ENV !== "production") {
     globalMongoClient = client
 }
 
